@@ -418,3 +418,5 @@ FodyWeavers.xsd
 *.vsix
 
 .DS_Store
+
+.vscode
