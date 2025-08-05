@@ -1,0 +1,88 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@inject IViewLocalizer L  
+
+@if (Context.User.Identity?.IsAuthenticated ?? false)
+{
+    var _path = Context.Request.Path.ToString();
+
+    <li class="sidebar-item has-sub @(_path.Contains("User/") && !_path.Contains("EditUser/") ? "active" : "")">
+        <a href="#" class='sidebar-link'>
+                <i class="bi bi-person-fill @(_path.Contains("User/") ? "text-light" : "text-primary")"></i>
+            <span>@L["1"]</span>
+        </a>
+        <ul class="submenu @(_path.Contains("User/") && !_path.Contains("EditUser/") ? "active" : "")" >
+            <li class="submenu-item @(_path.Contains("Profile") ? "active" : "")">
+                <a href="/User/Profile">@L["2"]</a>
+            </li>
+            <li class="submenu-item @(_path.Contains("TwoFactorType") ? "active" : "")">
+                <a href="/User/TwoFactorType">@L["3"]</a>
+            </li>
+            @{
+                var ClaimType = "IsLdapUser";
+                if(User.FindFirst(ClaimType)!.Value.ToString().ToLower()=="false") {
+                    <li class="submenu-item @(_path.Contains("ChangePassword") ? "active" : "")">
+                        <a href="/User/ChangePassword">@L["4"]</a>
+                    </li>
+                }
+            }
+            
+            <li class="submenu-item @(_path.Contains("debugUserInfo") ? "active" : "")">
+                <a href="/User/debugUserInfo">@L["5"]</a>
+            </li>
+        </ul>
+    </li>
+    if(Context.User.IsInRole("Admin")) {
+        <li class="sidebar-item has-sub @(_path.Contains("Admin/") && !_path.Contains("Logs") ? "active" : "")">
+            <a href="#" class='sidebar-link '>
+                                <i class="bi bi-shield-fill-exclamation @(_path.Contains("Admin/") && !_path.Contains("Logs") ? "text-light" : "text-primary")"></i>
+                <span>@L["7"]</span>
+            </a>            
+            <ul class="submenu @(_path.Contains("Admin/") && !_path.Contains("Logs") ? "active" : "")">
+                <li class="submenu-item @(_path.Contains("Users") ? "active" : "")">
+                    <a href="/Admin/Users">@L["8"]</a>
+                </li>
+                <li class="submenu-item @(_path.Contains("Roles") ? "active" : "")">
+                    <a href="/Admin/Roles">@L["9"]</a>
+                </li>                
+            </ul>
+        </li>
+        <li class="sidebar-item has-sub @(_path.Contains("Logs") ? "active" : "")">
+            <a href="#" class='sidebar-link'>
+                                <i class="bi bi-archive-fill @(_path.Contains("Logs") ? "text-light" : "text-primary")"></i>
+                <span>@L["10"]</span>
+            </a>
+            <ul class="submenu @(_path.Contains("Logs") ? "active" : "")">
+                <li class="submenu-item @(_path.Contains("Audit") ? "active" : "")">
+                    <a href="/Admin/LogsAudit">@L["11"]</a>
+                </li>
+                <li class="submenu-item @(_path.Contains("SystemLogs") ? "active" : "")">
+                    <a href="/Admin/LogsSystem">@L["12"]</a>
+                </li>
+                <li class="submenu-item @(_path.Contains("ErrorLogs") ? "active" : "")">
+                    <a href="/Admin/LogsError">@L["13"]</a>
+                </li>
+            </ul>
+        </li>
+        <li class="sidebar-item has-sub @(_path.Contains("Settings") ? "active" : "")">
+            <a href="#" class='sidebar-link'>
+                        <i class="bi bi-gear-fill @(_path.Contains("Settings") ? "text-light" : "text-primary")"></i>
+                <span>@L["17"]</span>
+            </a>
+            <ul class="submenu @(_path.Contains("Settings") ? "active" : "")">
+                <li class="submenu-item @(_path.Contains("Ldap") ? "active" : "")">
+                    <a href="/Settings/SettingsLdap">@L["14"]</a>
+                </li>
+                <li class="submenu-item @(_path.Contains("Mail") ? "active" : "")">
+                    <a href="/Settings/SettingsMail">@L["15"]</a>
+                </li>
+                <li class="submenu-item @(_path.Contains("App") ? "active" : "")">
+                    <a href="/Settings/SettingsApp">@L["16"]</a>
+                </li>
+                <li class="submenu-item @(_path.Contains("Brand") ? "active" : "")">
+                    <a href="/Settings/SettingsBrand">@L["18"]</a>
+                </li>
+            </ul>
+        </li>
+    }
+}

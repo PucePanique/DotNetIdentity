@@ -1,0 +1,204 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@inject ISettingsService _sett
+
+@{
+    var logonBg = "/assets/images/bg/bg.jpg";
+    if (_sett.Brand.LoginBackground != null)
+    {
+        logonBg = _sett.Brand.LoginBackground;
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content=".NET 8 Identity boilerplate">
+    <title>@ViewData["Title"] - @_sett.Brand.ApplicationName</title>
+    <link rel="stylesheet" href="~/assets/css/main/app.css">
+    <link rel="stylesheet" href="~/assets/css/pages/auth.css">
+    <link rel="shortcut icon" href="~/assets/images/logo/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="~/assets/images/logo/favicon-16x16.png" type="image/png">
+    <script src="~/assets/extensions/jquery/jquery.min.js"></script>
+    <style>
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        textarea:-webkit-autofill,
+        textarea:-webkit-autofill:hover,
+        textarea:-webkit-autofill:focus,
+        select:-webkit-autofill,
+        select:-webkit-autofill:hover,
+        select:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px @_sett.Brand.ColorLightBackground inset !important;
+        }
+
+        input.form-control {
+            background-color: @_sett.Brand.ColorLightBackground !important;
+        }
+        select.form-control {
+            background-color: @_sett.Brand.ColorLightBackground !important;
+        }
+        .form-group[class*=has-icon-] .form-control-icon i, .form-group[class*=has-icon-] .form-control-icon svg{
+            color: @_sett.Brand.ColorPrimary !important;
+        }
+        #auth-right {
+            background-repeat: no-repeat;
+            background-size: cover !important;
+            height: 100vh !important;
+            background-position: center !important;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: @_sett.Brand.ColorHeadlines !important;
+        }
+
+        a {
+            color: @_sett.Brand.ColorLink !important;
+        }
+
+        .text-muted {
+            color: @_sett.Brand.ColorTextMuted !important;
+        }
+
+        .bg-danger {
+            background-color: @_sett.Brand.ColorDanger !important;
+        }
+
+        .bg-success {
+            background-color: @_sett.Brand.ColorSuccess !important;
+        }
+
+        .bg-warning {
+            background-color: @_sett.Brand.ColorWarning !important;
+        }
+
+        .bg-primary {
+            background-color: @_sett.Brand.ColorPrimary !important;
+        }
+
+        .bg-info {
+            background-color: @_sett.Brand.ColorInfo !important;
+        }
+
+        .text-danger {
+            color: @_sett.Brand.ColorDanger !important;
+        }
+
+        .text-success {
+            color: @_sett.Brand.ColorSuccess !important;
+        }
+
+        .text-warning {
+            color: @_sett.Brand.ColorWarning !important;
+        }
+
+        .text-primary {
+            color: @_sett.Brand.ColorPrimary !important;
+        }
+
+        .text-info {
+            color: @_sett.Brand.ColorInfo !important;
+        }
+
+        .btn-primary {
+            background-color: @_sett.Brand.ColorPrimary !important;
+        }
+
+        a.btn-primary {
+            background-color: @_sett.Brand.ColorPrimary !important;
+            color: #fff !important;
+        }
+
+        .btn-warning {
+            background-color: @_sett.Brand.ColorWarning !important;
+        }
+
+        a.btn-warning {
+            background-color: @_sett.Brand.ColorWarning !important;
+            color: #000 !important
+        }
+
+        .btn-success {
+            background-color: @_sett.Brand.ColorSuccess !important;
+        }
+
+        .btn-success a {
+            background-color: @_sett.Brand.ColorSuccess !important;
+            color: #fff !important;
+        }
+
+        .btn-info {
+            background-color: @_sett.Brand.ColorInfo !important;
+        }
+
+        .btn-info a {
+            background-color: @_sett.Brand.ColorInfo !important;
+            color: #fff !important;
+        }
+
+        .alert-danger {
+            background-color: @_sett.Brand.ColorDanger !important;
+        }
+
+        .alert-warning {
+            background-color: @_sett.Brand.ColorWarning !important;
+        }
+
+        .alert-success {
+            background-color: @_sett.Brand.ColorSuccess !important;
+        }
+
+        .alert-info {
+            background-color: @_sett.Brand.ColorInfo !important;
+        }
+
+        #auth #auth-left .auth-subtitle {
+            color: @_sett.Brand.ColorTextMuted !important;
+            ;
+        }
+
+        .form-check-input:checked {
+            background-color: @_sett.Brand.ColorPrimary !important;
+            border: 1px solid @_sett.Brand.ColorPrimary !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="auth">
+
+        <div class="row h-100">
+            <div class="col-lg-5 col-12">
+                <div id="auth-left">
+                    @RenderBody()
+                </div>
+                <div class="text-center mb-0">
+                    <span class="text-muted">Release: v1.1 / Build:
+                        @GetType().Assembly.GetName().Version!.ToString()</span>
+                </div>
+            </div>
+            <div class="col-lg-7 d-none d-lg-block">
+                <div id="auth-right" style="background-image:url('@logonBg');background-repeat: no-repeat; background-size: cover;height: 100vh !important; background-position: top left !important;">
+                   <!-- <img src="@logonBg" style="max-height:100%;max-width:100%;display:inline;" /> -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="~/assets/js/bootstrap.js"></script>
+    <script>
+
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>
