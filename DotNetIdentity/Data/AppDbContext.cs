@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using DotNetIdentity.Models.DataModels;
 using System.ComponentModel.DataAnnotations.Schema;
+using DotNetIdentity.Models;
 
 namespace DotNetIdentity.Data
 {
@@ -28,6 +29,12 @@ namespace DotNetIdentity.Data
         /// </summary>
         /// <value></value>
         public DbSet<ApplicationSettings>? AppSettings { get; set; }
+        public DbSet<Ressources> Ressources { get; set; }
+        public DbSet<Images> Images { get; set; }
+        public DbSet<RessourcesImages> RessourcesImages { get; set; }
+        public DbSet<Tags> Tags { get; set; }
+        public DbSet<RessourcesTags> RessourcesTags { get; set; }
+        public DbSet<Status> Status { get; set; }
         /// <summary>
         /// IConfiguration property
         /// </summary>
