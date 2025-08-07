@@ -11,7 +11,7 @@ namespace DotNetIdentity.Models.ViewModels
         /// <summary>
         /// Les données binaires de l'image associée à la ressource.
         /// </summary>
-        public required byte[]? Image { get; set; }
+        public byte[]? Image { get; set; }
 
         /// <summary>
         /// Lien entre la ressource et l'image (table de jointure).

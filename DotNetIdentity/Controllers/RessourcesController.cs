@@ -44,7 +44,7 @@ namespace DotNetIdentity.Controllers
                     CreatedAt = res.CreatedAt,
                     UpdatedBy = res.UpdatedBy,
                     UpdatedAt = res.UpdatedAt,
-                    StatuId = res.StatuId,                    
+                    StatuId = res.StatuId,
                     Image = img.Image,
                     RessourceImage = resImg
                 }
@@ -56,7 +56,7 @@ namespace DotNetIdentity.Controllers
         // GET: RessourcesController/Create
         public async Task<ActionResult> Creer()
         {
-            RessourcesVM rvm = new() { Title = "" ,Image = [] };
+            RessourcesVM rvm = new() { Title = "", Image = [] };
             List<Status> statusList = await _Context.Status.ToListAsync();
             rvm.StatusList = new SelectList(statusList, "Id", "Label");
             return View(rvm);
@@ -64,8 +64,30 @@ namespace DotNetIdentity.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> CreerRessource(RessourcesVM ressourceVm)
+        public async Task<ActionResult> CreerRessource(RessourcesVM ressourceVm, IFormFile pic)
         {
+            if (pic is not null)
+            {
+                string NomImg = Path.GetFileName(pic.FileName);
+                string ext = Path.GetExtension(pic.FileName);
+
+                if (ext == ".jpg" || ext == ".png" || ext == ".jpeg")
+                {
+                    string FilePath = Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot\assets\RessourcesImages", NomImg);
+                    using (var stream = new FileStream(FilePath, FileMode.Create))
+                    {                       
+                        await pic.CopyToAsync(stream);
+                        stream.Close();
+                        ressourceVm.Image = System.IO.File.ReadAllBytes(FilePath);
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError("Image", "Le format de l'image n'est pas supporté. Veuillez utiliser .jpg, .png ou .jpeg.");
+                    return View("Creer", ressourceVm);
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -82,6 +104,27 @@ namespace DotNetIdentity.Controllers
                     };
 
                     await _Context.Ressources.AddAsync(Ressource);
+
+                    Images Images = new()
+                    {
+                        Image = ressourceVm.Image,                       
+                    };
+
+                    await _Context.Images.AddAsync(Images);
+                    await _Context.SaveChangesAsync();
+
+                    Ressource = await _Context.Ressources
+                        .OrderByDescending(r => r.CreatedAt)
+                        .FirstOrDefaultAsync();
+                    Images = await _Context.Images
+                        .OrderByDescending(i => i.Id)
+                        .FirstOrDefaultAsync();
+                    RessourcesImages ressourceImage = new()
+                    {
+                        RessourceId = Ressource.Id,
+                        ImageId = Images.Id
+                    };
+                    await _Context.RessourcesImages.AddAsync(ressourceImage);
                     await _Context.SaveChangesAsync();
                 }
                 catch (Exception ex)
