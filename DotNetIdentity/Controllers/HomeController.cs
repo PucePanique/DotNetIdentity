@@ -1,4 +1,5 @@
-﻿using DotNetIdentity.Models.Identity;
+﻿using DotNetIdentity.Models;
+using DotNetIdentity.Models.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -31,8 +32,8 @@ namespace DotNetIdentity.Controllers
         /// <returns>view Index</returns>
         public IActionResult Index()
         {
-            return View();
-            //return RedirectToAction(nameof(Index), controllerName: nameof(RessourcesController));
+            //return View();
+            return RedirectToAction(nameof(RessourcesController.Index), nameof(Ressources));
         }
 
         /// <summary>

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace DotNetIdentity.Models
+﻿namespace DotNetIdentity.Models
 {
     /// <summary>
     /// Représente une image avec un identifiant et des données binaires.
@@ -10,11 +8,11 @@ namespace DotNetIdentity.Models
         /// <summary>
         /// Identifiant unique de l'image.
         /// </summary>
-        int Id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// Données binaires de l'image.
         /// </summary>
-        BitArray Image { get; set; }
+        public byte[] Image { get; set; }
     }
 }

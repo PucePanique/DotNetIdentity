@@ -1,42 +1,98 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DotNetIdentity.Data;
+using DotNetIdentity.Models;
+using DotNetIdentity.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DotNetIdentity.Controllers
 {
     public class RessourcesController : Controller
     {
-        // GET: RessourcesController
-        public ActionResult Index()
+        private readonly AppDbContext _Context;
+        public RessourcesController(AppDbContext Context)
         {
-            return View();
+            _Context = Context;
         }
 
-        // GET: RessourcesController/Details/5
-        public ActionResult Details(int id)
+        // Remplacement de la ligne problématique dans la méthode Index
+        public async Task<ActionResult> Index()
         {
-            return View();
+            // Pseudocode détaillé :
+            // 1. Sélectionner toutes les ressources depuis _Context.Ressources.
+            // 2. Faire un join avec _Context.RessourcesImages sur Ressources.Id == RessourcesImages.RessourceId.
+            // 3. Faire un join avec _Context.Images sur RessourcesImages.ImageId == Images.Id.
+            // 4. Retourner une liste de RessourcesVM contenant la ressource, l'image associée et la table de jointure.
+
+            var ressourcesAvecImages = await (
+                from res in _Context.Ressources
+                join resImg in _Context.RessourcesImages on res.Id equals resImg.RessourceId
+                join img in _Context.Images on resImg.ImageId equals img.Id
+                select new RessourcesVM
+                {
+                    Id = res.Id,
+                    Title = res.Title,
+                    Description = res.Description,
+                    Url = res.Url,
+                    Category = res.Category,
+                    CreatedBy = res.CreatedBy,
+                    CreatedAt = res.CreatedAt,
+                    UpdatedBy = res.UpdatedBy,
+                    UpdatedAt = res.UpdatedAt,
+                    StatuId = res.StatuId,                    
+                    Image = img.Image,
+                    RessourceImage = resImg
+                }
+            ).ToListAsync();
+
+            return View(ressourcesAvecImages);
         }
 
         // GET: RessourcesController/Create
-        public ActionResult Create()
+        public async Task<ActionResult> Creer()
         {
-            return View();
+            RessourcesVM rvm = new() { Title = "" ,Image = [] };
+            List<Status> statusList = await _Context.Status.ToListAsync();
+            rvm.StatusList = new SelectList(statusList, "Id", "Label");
+            return View(rvm);
         }
 
-        // POST: RessourcesController/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> CreerRessource(RessourcesVM ressourceVm)
         {
-            try
+            if (ModelState.IsValid)
             {
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    Ressources Ressource = new()
+                    {
+                        Title = ressourceVm.Title,
+                        Description = ressourceVm.Description,
+                        Url = ressourceVm.Url,
+                        Category = ressourceVm.Category,
+                        CreatedAt = DateTime.Now,
+                        CreatedBy = User.Identity?.Name ?? "Inconnu",
+                        StatuId = ressourceVm.StatuId
+                    };
+
+                    await _Context.Ressources.AddAsync(Ressource);
+                    await _Context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    throw;
+                }
             }
-            catch
-            {
-                return View();
-            }
+
+            return RedirectToAction(nameof(RessourcesController.Creer));
         }
+
 
         // GET: RessourcesController/Edit/5
         public ActionResult Edit(int id)

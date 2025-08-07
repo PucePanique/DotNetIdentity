@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DotNetIdentity.Models
 {
@@ -14,23 +15,23 @@ namespace DotNetIdentity.Models
         /// <summary>
         /// Obtient ou définit le titre de la ressource.
         /// </summary>
-        public required string Tiltle { get; set; }
+        [Required]
+        public required string Title { get; set; }
         /// <summary>
         /// Obtient ou définit la description de la ressource.
         /// </summary>
+        [Required]
         public string? Description { get; set; }
         /// <summary>
         /// Obtient ou définit l'URL de la ressource.
         /// </summary>
+        [Required]
         public string? Url { get; set; }
         /// <summary>
         /// Obtient ou définit la catégorie de la ressource.
         /// </summary>
+        [Required]
         public string? Category { get; set; }
-        /// <summary>
-        /// Obtient ou définit l'URL de l'image associée à la ressource.
-        /// </summary>
-        public string? ImageUrl { get; set; }
         /// <summary>
         /// Obtient ou définit l'utilisateur ayant créé la ressource.
         /// </summary>
@@ -50,8 +51,9 @@ namespace DotNetIdentity.Models
         /// <summary>
         /// Obtient ou définit l'identifiant du statut de la ressource (par exemple, "Active", "Inactive", "Archived").
         /// </summary>
-        [ForeignKey("Status.Id")]
-        public string? StatusId { get; set; }
+        [ForeignKey(nameof(Status))]
+        [Column("StatuId")]        
+        public int StatuId { get; set; }
         /// <summary>
         /// Obtient ou définit le statut de la ressource.
         /// </summary>
