@@ -1,17 +1,35 @@
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
-@inject IViewLocalizer L  
+@inject IViewLocalizer L
 
+@{
+    var _path = Context.Request.Path.ToString();
+}
+<li class="sidebar-item has-sub @(_path.Contains("Activités") ? "active" : "")">
+    <a href="#" class='sidebar-link'>
+        <i class="bi bi-bullseye @(_path.Contains("Activités") ? "text-light" : "text-primary")"></i>
+        <span>@L["23"]</span>
+    </a>
+    <ul class="submenu @(_path.Contains("Logs") ? "active" : "")">
+        <li class="submenu-item @(_path.Contains("Audit") ? "active" : "")">
+            <a href="/Admin/LogsAudit">@L["11"]</a>
+        </li>
+        <li class="submenu-item @(_path.Contains("SystemLogs") ? "active" : "")">
+            <a href="/Admin/LogsSystem">@L["12"]</a>
+        </li>
+        <li class="submenu-item @(_path.Contains("ErrorLogs") ? "active" : "")">
+            <a href="/Admin/LogsError">@L["13"]</a>
+        </li>
+    </ul>
+</li>
 @if (Context.User.Identity?.IsAuthenticated ?? false)
 {
-    var _path = Context.Request.Path.ToString();
-
     <li class="sidebar-item has-sub @(_path.Contains("User/") && !_path.Contains("EditUser/") ? "active" : "")">
         <a href="#" class='sidebar-link'>
-                <i class="bi bi-person-fill @(_path.Contains("User/") ? "text-light" : "text-primary")"></i>
+            <i class="bi bi-person-fill @(_path.Contains("User/") ? "text-light" : "text-primary")"></i>
             <span>@L["1"]</span>
         </a>
-        <ul class="submenu @(_path.Contains("User/") && !_path.Contains("EditUser/") ? "active" : "")" >
+        <ul class="submenu @(_path.Contains("User/") && !_path.Contains("EditUser/") ? "active" : "")">
             <li class="submenu-item @(_path.Contains("Profile") ? "active" : "")">
                 <a href="/User/Profile">@L["2"]</a>
             </li>
@@ -20,36 +38,38 @@
             </li>
             @{
                 var ClaimType = "IsLdapUser";
-                if(User.FindFirst(ClaimType)!.Value.ToString().ToLower()=="false") {
+                if (User.FindFirst(ClaimType)!.Value.ToString().ToLower() == "false")
+                {
                     <li class="submenu-item @(_path.Contains("ChangePassword") ? "active" : "")">
                         <a href="/User/ChangePassword">@L["4"]</a>
                     </li>
                 }
             }
-            
+
             <li class="submenu-item @(_path.Contains("debugUserInfo") ? "active" : "")">
                 <a href="/User/debugUserInfo">@L["5"]</a>
             </li>
         </ul>
     </li>
-    if(Context.User.IsInRole("Admin")) {
+    if (Context.User.IsInRole("Admin"))
+    {
         <li class="sidebar-item has-sub @(_path.Contains("Admin/") && !_path.Contains("Logs") ? "active" : "")">
             <a href="#" class='sidebar-link '>
-                                <i class="bi bi-shield-fill-exclamation @(_path.Contains("Admin/") && !_path.Contains("Logs") ? "text-light" : "text-primary")"></i>
+                <i class="bi bi-shield-fill-exclamation @(_path.Contains("Admin/") && !_path.Contains("Logs") ? "text-light" : "text-primary")"></i>
                 <span>@L["7"]</span>
-            </a>            
+            </a>
             <ul class="submenu @(_path.Contains("Admin/") && !_path.Contains("Logs") ? "active" : "")">
                 <li class="submenu-item @(_path.Contains("Users") ? "active" : "")">
                     <a href="/Admin/Users">@L["8"]</a>
                 </li>
                 <li class="submenu-item @(_path.Contains("Roles") ? "active" : "")">
                     <a href="/Admin/Roles">@L["9"]</a>
-                </li>                
+                </li>
             </ul>
         </li>
         <li class="sidebar-item has-sub @(_path.Contains("Logs") ? "active" : "")">
             <a href="#" class='sidebar-link'>
-                                <i class="bi bi-archive-fill @(_path.Contains("Logs") ? "text-light" : "text-primary")"></i>
+                <i class="bi bi-archive-fill @(_path.Contains("Logs") ? "text-light" : "text-primary")"></i>
                 <span>@L["10"]</span>
             </a>
             <ul class="submenu @(_path.Contains("Logs") ? "active" : "")">
@@ -64,9 +84,26 @@
                 </li>
             </ul>
         </li>
+        <li class="sidebar-item has-sub @(_path.Contains("Ressources") ? "active" : "")">
+            <a href="#" class='sidebar-link'>
+                <i class="bi bi-journal-richtext @(_path.Contains("Ressources") ? "text-light" : "text-primary")"></i>
+                <span>@L["19"]</span>
+            </a>
+            <ul class="submenu @(_path.Contains("Ressources") ? "active" : "")">
+                <li class="submenu-item @(_path.Contains("Liste") ? "active" : "")">
+                    <a href="/Ressources/Liste">@L["20"]</a>
+                </li>
+                <li class="submenu-item @(_path.Contains("Créer") ? "active" : "")">
+                    <a href="/Ressources/Creer">@L["21"]</a>
+                </li>
+                <li class="submenu-item @(_path.Contains("Modifier") ? "active" : "")">
+                    <a href="/Ressources/Modifier">@L["22"]</a>
+                </li>
+            </ul>
+        </li>
         <li class="sidebar-item has-sub @(_path.Contains("Settings") ? "active" : "")">
             <a href="#" class='sidebar-link'>
-                        <i class="bi bi-gear-fill @(_path.Contains("Settings") ? "text-light" : "text-primary")"></i>
+                <i class="bi bi-gear-fill @(_path.Contains("Settings") ? "text-light" : "text-primary")"></i>
                 <span>@L["17"]</span>
             </a>
             <ul class="submenu @(_path.Contains("Settings") ? "active" : "")">

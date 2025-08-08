@@ -2,13 +2,11 @@
 using DotNetIdentity.Models;
 using DotNetIdentity.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Linq;
-using System.Threading.Tasks;
+using SkiaSharp;
+
 
 namespace DotNetIdentity.Controllers
 {
@@ -21,43 +19,49 @@ namespace DotNetIdentity.Controllers
         }
 
         // Remplacement de la ligne problématique dans la méthode Index
-        public async Task<ActionResult> Index()
+        public async Task<IActionResult> Index(string search = "", int take = 6)
         {
-            // Pseudocode détaillé :
-            // 1. Sélectionner toutes les ressources depuis _Context.Ressources.
-            // 2. Faire un join avec _Context.RessourcesImages sur Ressources.Id == RessourcesImages.RessourceId.
-            // 3. Faire un join avec _Context.Images sur RessourcesImages.ImageId == Images.Id.
-            // 4. Retourner une liste de RessourcesVM contenant la ressource, l'image associée et la table de jointure.
+            var ressourcesQuery = from res in _Context.Ressources
+                                  join resImg in _Context.RessourcesImages on res.Id equals resImg.RessourceId
+                                  join img in _Context.Images on resImg.ImageId equals img.Id
+                                  select new RessourcesVM
+                                  {
+                                      Id = res.Id,
+                                      Title = res.Title,
+                                      Description = res.Description,
+                                      Url = res.Url,
+                                      Category = res.Category,
+                                      CreatedBy = res.CreatedBy,
+                                      CreatedAt = res.CreatedAt,
+                                      UpdatedBy = res.UpdatedBy,
+                                      UpdatedAt = res.UpdatedAt,
+                                      StatuId = res.StatuId,
+                                      ImagePath = img.Image
+                                  };
 
-            var ressourcesAvecImages = await (
-                from res in _Context.Ressources
-                join resImg in _Context.RessourcesImages on res.Id equals resImg.RessourceId
-                join img in _Context.Images on resImg.ImageId equals img.Id
-                select new RessourcesVM
-                {
-                    Id = res.Id,
-                    Title = res.Title,
-                    Description = res.Description,
-                    Url = res.Url,
-                    Category = res.Category,
-                    CreatedBy = res.CreatedBy,
-                    CreatedAt = res.CreatedAt,
-                    UpdatedBy = res.UpdatedBy,
-                    UpdatedAt = res.UpdatedAt,
-                    StatuId = res.StatuId,
-                    Image = img.Image,
-                    RessourceImage = resImg
-                }
-            ).ToListAsync();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                ressourcesQuery = ressourcesQuery.Where(r =>
+                    r.Title.Contains(search) || r.Description.Contains(search));
+            }
 
-            return View(ressourcesAvecImages);
+            var ressources = await ressourcesQuery
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(take)
+                .ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.Take = take;
+            ViewBag.Total = await ressourcesQuery.CountAsync();
+
+            return View(ressources);
         }
+
 
         // GET: RessourcesController/Create
         public async Task<ActionResult> Creer()
         {
-            RessourcesVM rvm = new() { Title = "", Image = [] };
-
+            RessourcesVM rvm = new() { Title = "" };
             List<Status> statusList = await _Context.Status.ToListAsync();
             rvm.StatusList = new SelectList(statusList, "Id", "Label");
             return View(rvm);
@@ -67,6 +71,8 @@ namespace DotNetIdentity.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> CreerRessource(RessourcesVM ressourceVm, IFormFile pic)
         {
+            string FilePath = "";
+
             if (pic is not null)
             {
                 string NomImg = Path.GetFileName(pic.FileName);
@@ -74,13 +80,18 @@ namespace DotNetIdentity.Controllers
 
                 if (ext == ".jpg" || ext == ".png" || ext == ".jpeg")
                 {
-                    string FilePath = Path.Combine(Directory.GetCurrentDirectory(), @"wwwroot\assets\RessourcesImages", NomImg);
-                    using (var stream = new FileStream(FilePath, FileMode.Create))
-                    {                       
+
+                    string relativePath = Path.Combine("/assets/RessourcesImages", NomImg); // pour le HTML
+                    string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/RessourcesImages", NomImg); // pour sauvegarder sur le disque
+
+                    using (var stream = new FileStream(absolutePath, FileMode.Create))
+                    {
                         await pic.CopyToAsync(stream);
                         stream.Close();
-                        ressourceVm.Image = System.IO.File.ReadAllBytes(FilePath);
                     }
+
+                    FilePath = relativePath; // ici tu stockes le chemin relatif accessible par le client
+
                 }
                 else
                 {
@@ -88,7 +99,7 @@ namespace DotNetIdentity.Controllers
                     return View("Creer", ressourceVm);
                 }
             }
-            
+
             if (ModelState.IsValid)
             {
                 try
@@ -108,7 +119,7 @@ namespace DotNetIdentity.Controllers
 
                     Images Images = new()
                     {
-                        Image = ressourceVm.Image,                       
+                        Image = FilePath,
                     };
 
                     await _Context.Images.AddAsync(Images);

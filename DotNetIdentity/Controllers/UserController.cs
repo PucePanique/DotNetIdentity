@@ -260,9 +260,9 @@ namespace DotNetIdentity.Controllers
                             return Redirect(returnUrl.ToString() ?? "/");
                         }
                         if (User.IsInRole("Admin"))
-                            return RedirectToAction("Index", "Admin");
+                            return RedirectToAction("Index", "Ressources");
                         if (User.IsInRole("User"))
-                            return RedirectToAction("Index", "Home");
+                            return RedirectToAction("Index", "Ressources");
                     }
                     else
                     {

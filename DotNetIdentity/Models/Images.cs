@@ -13,6 +13,6 @@
         /// <summary>
         /// Données binaires de l'image.
         /// </summary>
-        public byte[] Image { get; set; }
+        public string? Image { get; set; }
     }
 }
