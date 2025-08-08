@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SkiaSharp;
 
+
 namespace DotNetIdentity.Controllers
 {
     public class RessourcesController : Controller
@@ -71,6 +72,7 @@ namespace DotNetIdentity.Controllers
         public async Task<ActionResult> CreerRessource(RessourcesVM ressourceVm, IFormFile pic)
         {
             string FilePath = "";
+
             if (pic is not null)
             {
                 string NomImg = Path.GetFileName(pic.FileName);
@@ -78,6 +80,7 @@ namespace DotNetIdentity.Controllers
 
                 if (ext == ".jpg" || ext == ".png" || ext == ".jpeg")
                 {
+
                     string relativePath = Path.Combine("/assets/RessourcesImages", NomImg); // pour le HTML
                     string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/RessourcesImages", NomImg); // pour sauvegarder sur le disque
 
@@ -88,6 +91,7 @@ namespace DotNetIdentity.Controllers
                     }
 
                     FilePath = relativePath; // ici tu stockes le chemin relatif accessible par le client
+
                 }
                 else
                 {
@@ -133,6 +137,7 @@ namespace DotNetIdentity.Controllers
                         ImageId = Images.Id
                     };
                     await _Context.RessourcesImages.AddAsync(ressourceImage);
+
                     await _Context.SaveChangesAsync();
                 }
                 catch (Exception ex)
