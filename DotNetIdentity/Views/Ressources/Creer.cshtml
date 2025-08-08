@@ -1,12 +1,12 @@
 ﻿@model RessourcesVM
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Création d'une ressource";
     Layout = "_MainLayout";
 }
 
 <div class="row">
 	<div class="col-md-12">
-		<form asp-action="CreerRessource" method="post" enctype="multipart/form-data" class="form-creer-client d-flex flex-wrap justify-content-start align-items-stretch" style="display:flex;">
+		<form asp-controller="Ressources" asp-action="CreerRessource" enctype="multipart/form-data" class="form-creer-client d-flex flex-wrap justify-content-start align-items-stretch" style="display:flex;">
 			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
 			<div class="form-group m-2">

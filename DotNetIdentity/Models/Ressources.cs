@@ -51,12 +51,12 @@ namespace DotNetIdentity.Models
         /// <summary>
         /// Obtient ou définit l'identifiant du statut de la ressource (par exemple, "Active", "Inactive", "Archived").
         /// </summary>
-        [ForeignKey(nameof(Status))]
+        [ForeignKey(nameof(status))]
         [Column("StatuId")]        
         public int StatuId { get; set; }
         /// <summary>
         /// Obtient ou définit le statut de la ressource.
         /// </summary>
-        public Status? Status { get; set; }
+        public Status status { get; set; } = new();
     }
 }

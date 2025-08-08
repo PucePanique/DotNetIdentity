@@ -13,6 +13,6 @@
         /// <summary>
         /// Libellé du statut.
         /// </summary>
-        public string Label { get; set; } = string.Empty;
+        public string? Label { get; set; } = string.Empty;
     }
 }

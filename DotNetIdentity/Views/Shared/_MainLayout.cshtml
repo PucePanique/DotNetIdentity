@@ -379,7 +379,7 @@
                                     }
                                 </li>
                                 <li>
-                                    <form id="selectLanguage" asp-controller="Culture" asp-action="SetCulture" asp-route-returnUrl="@returnUrl" method="post">
+                                    <form id="selectLanguage" hidden="hidden" asp-controller="Culture" asp-action="SetCulture" asp-route-returnUrl="@returnUrl" method="post">
                                         <span class="dropdown-item drpHead">
                                             <i class="icon-mid bi bi-translate me-2" style="cursor: pointer;"></i>
                                             @if (culture == "en")
@@ -409,7 +409,7 @@
                                 @if (User.Identity.IsAuthenticated)
                                 {
                                     <li>
-                                        <a class="dropdown-item drpHead" asp-controller="User" asp-action="Logout" asp-route-returnUrl="/Home/Index">
+                                        <a class="btn btn-outline-light" asp-controller="User" asp-action="Logout" asp-route-returnUrl="/Ressources/Index">
                                             <i class="icon-mid bi bi-box-arrow-left me-2"></i> @L["6"]
                                         </a>
                                     </li>

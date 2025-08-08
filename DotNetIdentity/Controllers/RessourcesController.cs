@@ -13,9 +13,14 @@ namespace DotNetIdentity.Controllers
     public class RessourcesController : Controller
     {
         private readonly AppDbContext _Context;
-        public RessourcesController(AppDbContext Context)
+        /// <summary>
+        /// Property of type ILogger
+        /// </summary>
+        private readonly ILogger<UserController> _logger;
+        public RessourcesController(AppDbContext Context, ILogger<UserController> logger)
         {
             _Context = Context;
+            _logger = logger;
         }
 
         // Remplacement de la ligne problématique dans la méthode Index
@@ -24,6 +29,7 @@ namespace DotNetIdentity.Controllers
             var ressourcesQuery = from res in _Context.Ressources
                                   join resImg in _Context.RessourcesImages on res.Id equals resImg.RessourceId
                                   join img in _Context.Images on resImg.ImageId equals img.Id
+                                  join status in _Context.Status on res.StatuId equals status.Id
                                   select new RessourcesVM
                                   {
                                       Id = res.Id,
@@ -36,8 +42,10 @@ namespace DotNetIdentity.Controllers
                                       UpdatedBy = res.UpdatedBy,
                                       UpdatedAt = res.UpdatedAt,
                                       StatuId = res.StatuId,
+                                      status = status,
                                       ImagePath = img.Image
                                   };
+            ressourcesQuery = ressourcesQuery.Where(r => r.status.Label == "Actif");
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -59,7 +67,7 @@ namespace DotNetIdentity.Controllers
 
 
         // GET: RessourcesController/Create
-        public async Task<ActionResult> Creer()
+        public async Task<IActionResult> Creer()
         {
             RessourcesVM rvm = new() { Title = "" };
             List<Status> statusList = await _Context.Status.ToListAsync();
@@ -69,35 +77,32 @@ namespace DotNetIdentity.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> CreerRessource(RessourcesVM ressourceVm, IFormFile pic)
+        public async Task<IActionResult> CreerRessource(RessourcesVM ressourceVm, IFormFile pic)
         {
             string FilePath = "";
+            string[] allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp" };
+            string[] allowedContentTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp" };
 
             if (pic is not null)
             {
                 string NomImg = Path.GetFileName(pic.FileName);
-                string ext = Path.GetExtension(pic.FileName);
+                string ext = Path.GetExtension(pic.FileName).ToLowerInvariant();
 
-                if (ext == ".jpg" || ext == ".png" || ext == ".jpeg")
+                if (!allowedExtensions.Contains(ext) || !allowedContentTypes.Contains(pic.ContentType))
                 {
-
-                    string relativePath = Path.Combine("/assets/RessourcesImages", NomImg); // pour le HTML
-                    string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/RessourcesImages", NomImg); // pour sauvegarder sur le disque
-
-                    using (var stream = new FileStream(absolutePath, FileMode.Create))
-                    {
-                        await pic.CopyToAsync(stream);
-                        stream.Close();
-                    }
-
-                    FilePath = relativePath; // ici tu stockes le chemin relatif accessible par le client
-
-                }
-                else
-                {
-                    ModelState.AddModelError("Image", "Le format de l'image n'est pas supporté. Veuillez utiliser .jpg, .png ou .jpeg.");
+                    ModelState.AddModelError("Image", "Format d'image non supporté. Formats autorisés : jpg, jpeg, png, webp, gif, bmp.");
                     return View("Creer", ressourceVm);
                 }
+
+                string relativePath = Path.Combine("/assets/RessourcesImages", NomImg);
+                string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/RessourcesImages", NomImg);
+
+                using (var stream = new FileStream(absolutePath, FileMode.Create))
+                {
+                    await pic.CopyToAsync(stream);
+                }
+
+                FilePath = relativePath;
             }
 
             if (ModelState.IsValid)
@@ -112,25 +117,20 @@ namespace DotNetIdentity.Controllers
                         Category = ressourceVm.Category,
                         CreatedAt = DateTime.Now,
                         CreatedBy = User.Identity?.Name ?? "Inconnu",
-                        StatuId = ressourceVm.StatuId
+                        StatuId = ressourceVm.StatuId,
+                        status = await _Context.Status.FindAsync(ressourceVm.StatuId)
                     };
 
                     await _Context.Ressources.AddAsync(Ressource);
 
                     Images Images = new()
                     {
-                        Image = FilePath,
+                        Image = FilePath
                     };
 
                     await _Context.Images.AddAsync(Images);
                     await _Context.SaveChangesAsync();
 
-                    Ressource = await _Context.Ressources
-                        .OrderByDescending(r => r.CreatedAt)
-                        .FirstOrDefaultAsync();
-                    Images = await _Context.Images
-                        .OrderByDescending(i => i.Id)
-                        .FirstOrDefaultAsync();
                     RessourcesImages ressourceImage = new()
                     {
                         RessourceId = Ressource.Id,
@@ -139,57 +139,98 @@ namespace DotNetIdentity.Controllers
                     await _Context.RessourcesImages.AddAsync(ressourceImage);
 
                     await _Context.SaveChangesAsync();
+                    _logger.LogWarning("CREATE: User " + User.Identity!.Name + " Ressource créé.");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    throw;
+                   
                 }
             }
 
-            return RedirectToAction(nameof(RessourcesController.Creer));
+            return View(nameof(RessourcesController.Creer));
         }
 
-
-        // GET: RessourcesController/Edit/5
-        public ActionResult Edit(int id)
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Liste(string search = "", int page = 1)
         {
-            return View();
+            const int pageSize = 10;
+
+            // Requête de base incluant le status (via navigation) et les ressources
+            var baseQuery = _Context.Ressources
+                .Include(r => r.status)
+                .AsQueryable();
+
+            // Option de recherche
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                baseQuery = baseQuery.Where(r =>
+                    r.Title.Contains(search) ||
+                    r.Description.Contains(search) ||
+                    r.Url.Contains(search));
+            }
+
+            int totalItems = await baseQuery.CountAsync();
+
+            // Requête paginée + projection vers RessourcesVM avec jointure explicite sur RessourceImage
+            var ressources = await (
+                from res in baseQuery
+                join ri in _Context.RessourcesImages on res.Id equals ri.RessourceId into riJoin
+                from ri in riJoin.DefaultIfEmpty()
+                join img in _Context.Images on ri.ImageId equals img.Id into imgJoin
+                from img in imgJoin.DefaultIfEmpty()
+                orderby res.CreatedAt descending
+                select new RessourcesVM
+                {
+                    Id = res.Id,
+                    Title = res.Title,
+                    Description = res.Description,
+                    Url = res.Url,
+                    Category = res.Category,
+                    CreatedBy = res.CreatedBy,
+                    CreatedAt = res.CreatedAt,
+                    UpdatedBy = res.UpdatedBy,
+                    UpdatedAt = res.UpdatedAt,
+                    StatuId = res.StatuId,
+                    status = res.status,
+                    ImagePath = img != null ? img.Image : null
+                })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.Page = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return View(ressources);
         }
 
-        // POST: RessourcesController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ToggleStatut(int id)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            var ressource = await _Context.Ressources.FindAsync(id);
+            if (ressource == null)
+                return NotFound();
+
+            var statutActif = await _Context.Status.FirstOrDefaultAsync(s => s.Label == "Actif");
+            var statutInactif = await _Context.Status.FirstOrDefaultAsync(s => s.Label == "Inactif");
+
+            if (statutActif == null || statutInactif == null)
+                return BadRequest("Les statuts nécessaires n'existent pas.");
+
+            ressource.StatuId = (ressource.StatuId == statutActif.Id)
+                ? statutInactif.Id
+                : statutActif.Id;
+
+            ressource.UpdatedAt = DateTime.Now;
+            ressource.UpdatedBy = User.Identity?.Name ?? "System";
+
+            await _Context.SaveChangesAsync();
+            _logger.LogWarning("UPD: User " + User.Identity!.Name + ", Ressource " + ressource.Id + " Status de ressource mis à jours.");
+            return RedirectToAction(nameof(Liste));
         }
 
-        // GET: RessourcesController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
 
-        // POST: RessourcesController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
     }
 }
