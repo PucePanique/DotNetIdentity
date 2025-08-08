@@ -4,27 +4,100 @@
     Layout = "_MainLayout";
 }
 
-<div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+<style>
+    img.shadow-1-strong {
+        transition: transform 0.3s ease;
+    }
+
+        img.shadow-1-strong:hover {
+            transform: scale(1.05);
+        }
+</style>
+<div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel" style=" background-color:lightgray">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    </div>
     <div class="carousel-inner">
+        @{
+            var index = 0;
+        }
         @foreach (var Ressource in Model)
         {
-            <div class="carousel-item">
-                <img src="@Ressource.Image" class="d-block w-100" alt="@Ressource.Title">
-                <div class="carousel-caption d-none d-md-block">
+            @if (index > 2)
+            {
+                break;
+            }
+            <div class="carousel-item @(index == 0 ? "active" : "")" style="height:300px; background-color: lightgray;">
+                @if (!string.IsNullOrWhiteSpace(Ressource.ImagePath))
+                {
+                    <a href="@Ressource.Url" target="_blank" rel="noopener noreferrer">
+                        <img src="@Url.Content(Ressource.ImagePath)" class="d-block w-100" alt="@Ressource.Title" style="height:100%; object-fit:cover;" />
+                    </a>
+                }
+                <div class="carousel-caption d-none d-md-block text-dark bg-light bg-opacity-75 rounded p-2">
                     <h5>@Ressource.Title</h5>
-                    <img src="@Ressource.Image" alt="@Ressource.Title" class="img-fluid mb-2" style="max-width: 50px;">
                     <p>@Ressource.Description</p>
                 </div>
             </div>
+            index++;            
         }
-
     </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Previous</span>
     </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
         <span class="carousel-control-next-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Next</span>
     </button>
 </div>
+<hr />
+<h3>Galerie de Ressources</h3>
+<form asp-action="Index" method="get" class="mb-4 d-flex">
+    <input type="text" name="search" value="@ViewBag.Search" class="form-control me-2" placeholder="Rechercher une ressource..." />
+    <button type="submit" class="btn btn-primary">Rechercher</button>
+</form>
+
+<div class="container mb-4">
+    <div class="row">
+        @foreach (var ressource in Model)
+        {
+            if (!string.IsNullOrWhiteSpace(ressource.ImagePath))
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow">
+                        <a href="@ressource.Url" target="_blank">
+                            <img src="@Url.Content(ressource.ImagePath)"
+                                 class="card-img-top"
+                                 alt="@ressource.Title"
+                                 style="height: 250px; object-fit: cover;" />
+                        </a>
+                        <div class="card-body">
+                            <h5 class="card-title">@ressource.Title</h5>
+                            <p class="card-text">@ressource.Description</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    @if ((int)ViewBag.Take < (int)ViewBag.Total)
+    {
+        <div class="text-center mt-4">
+            <form asp-action="Index" method="get">
+                <input type="hidden" name="search" value="@ViewBag.Search" />
+                <input type="hidden" name="take" value="@(ViewBag.Take + 6)" />
+                <button type="submit" class="btn btn-outline-secondary">
+                    Voir plus
+                </button>
+            </form>
+        </div>
+    }
+
+</div>
+
+
+
+

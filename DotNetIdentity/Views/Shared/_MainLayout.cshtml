@@ -286,6 +286,8 @@
             color: #fff;
         }
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 </head>
 
 <body>
@@ -315,13 +317,14 @@
                 </div>
                 <div class="sidebar-menu">
                     <ul class="menu" style="padding-left:1.2rem !important;">
-                        <li class="sidebar-title">@L["1"]</li>
-                        <li class="sidebar-title"><a asp-action="Index" asp-controller="Ressources">Ressources</a></li>
-                        <li class="sidebar-title"><a asp-action="Creer" asp-controller="Ressources">Creer Ressources</a></li>
+                        <li class="sidebar-title"><a asp-action="Index" asp-controller="Ressources">Ressources</a></li>                        
                         <partial name="_NavMenu" />
                     </ul>
                 </div>
+
             </div>
+
+
         </div>
         <div id="main" class='layout-navbar'>
             <header class="mb-3">
