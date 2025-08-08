@@ -57,6 +57,7 @@ namespace DotNetIdentity.Controllers
         public async Task<ActionResult> Creer()
         {
             RessourcesVM rvm = new() { Title = "", Image = [] };
+
             List<Status> statusList = await _Context.Status.ToListAsync();
             rvm.StatusList = new SelectList(statusList, "Id", "Label");
             return View(rvm);
@@ -87,7 +88,7 @@ namespace DotNetIdentity.Controllers
                     return View("Creer", ressourceVm);
                 }
             }
-
+            
             if (ModelState.IsValid)
             {
                 try
@@ -125,6 +126,7 @@ namespace DotNetIdentity.Controllers
                         ImageId = Images.Id
                     };
                     await _Context.RessourcesImages.AddAsync(ressourceImage);
+
                     await _Context.SaveChangesAsync();
                 }
                 catch (Exception ex)
