@@ -53,4 +53,7 @@
   <ItemGroup>
     <Content Remove="wwwroot\assets\images\bg\4853433.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\assets\RessourcesImages\" />
+  </ItemGroup>
 </Project>
