@@ -29,7 +29,6 @@ namespace DotNetIdentity.Controllers
             var ressourcesQuery = from res in _Context.Ressources
                                   join resImg in _Context.RessourcesImages on res.Id equals resImg.RessourceId
                                   join img in _Context.Images on resImg.ImageId equals img.Id
-                                  join status in _Context.Status on res.StatuId equals status.Id
                                   select new RessourcesVM
                                   {
                                       Id = res.Id,
@@ -41,11 +40,10 @@ namespace DotNetIdentity.Controllers
                                       CreatedAt = res.CreatedAt,
                                       UpdatedBy = res.UpdatedBy,
                                       UpdatedAt = res.UpdatedAt,
-                                      StatuId = res.StatuId,
-                                      status = status,
+                                      Status = res.Status,
                                       ImagePath = img.Image
                                   };
-            ressourcesQuery = ressourcesQuery.Where(r => r.status.Label == "Actif");
+            ressourcesQuery = ressourcesQuery.Where(r => r.Status);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -117,8 +115,7 @@ namespace DotNetIdentity.Controllers
                         Category = ressourceVm.Category,
                         CreatedAt = DateTime.Now,
                         CreatedBy = User.Identity?.Name ?? "Inconnu",
-                        StatuId = ressourceVm.StatuId,
-                        status = await _Context.Status.FindAsync(ressourceVm.StatuId)
+                        Status = ressourceVm.Status
                     };
 
                     await _Context.Ressources.AddAsync(Ressource);
@@ -143,7 +140,7 @@ namespace DotNetIdentity.Controllers
                 }
                 catch (Exception)
                 {
-                   
+
                 }
             }
 
@@ -155,10 +152,9 @@ namespace DotNetIdentity.Controllers
         public async Task<IActionResult> Liste(string search = "", int page = 1)
         {
             const int pageSize = 10;
-
+            //TODO: Ajuster le status
             // Requête de base incluant le status (via navigation) et les ressources
             var baseQuery = _Context.Ressources
-                .Include(r => r.status)
                 .AsQueryable();
 
             // Option de recherche
@@ -191,8 +187,7 @@ namespace DotNetIdentity.Controllers
                     CreatedAt = res.CreatedAt,
                     UpdatedBy = res.UpdatedBy,
                     UpdatedAt = res.UpdatedAt,
-                    StatuId = res.StatuId,
-                    status = res.status,
+                    Status = res.Status,
                     ImagePath = img != null ? img.Image : null
                 })
                 .Skip((page - 1) * pageSize)
@@ -207,28 +202,19 @@ namespace DotNetIdentity.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ToggleStatut(int id)
+        public async Task<IActionResult> ToggleStatut(int id, string search = "", int page = 1)
         {
             var ressource = await _Context.Ressources.FindAsync(id);
             if (ressource == null)
                 return NotFound();
 
-            var statutActif = await _Context.Status.FirstOrDefaultAsync(s => s.Label == "Actif");
-            var statutInactif = await _Context.Status.FirstOrDefaultAsync(s => s.Label == "Inactif");
-
-            if (statutActif == null || statutInactif == null)
-                return BadRequest("Les statuts nécessaires n'existent pas.");
-
-            ressource.StatuId = (ressource.StatuId == statutActif.Id)
-                ? statutInactif.Id
-                : statutActif.Id;
-
+            ressource.Status = !ressource.Status;
             ressource.UpdatedAt = DateTime.Now;
             ressource.UpdatedBy = User.Identity?.Name ?? "System";
 
             await _Context.SaveChangesAsync();
             _logger.LogWarning("UPD: User " + User.Identity!.Name + ", Ressource " + ressource.Id + " Status de ressource mis à jours.");
-            return RedirectToAction(nameof(Liste));
+            return RedirectToAction(nameof(Liste), new { search, page });
         }
 
 

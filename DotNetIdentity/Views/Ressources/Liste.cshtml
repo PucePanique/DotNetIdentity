@@ -20,7 +20,7 @@
             <th>@Html.DisplayNameFor(m => m.CreatedAt)</th>
             <th>@Html.DisplayNameFor(m => m.UpdatedBy)</th>
             <th>@Html.DisplayNameFor(m => m.UpdatedAt)</th>
-            <th>@Html.DisplayNameFor(m => m.status)</th>
+            <th>@Html.DisplayNameFor(m => m.Status)</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -42,8 +42,8 @@
                 <td>@res.UpdatedBy</td>
                 <td>@res.UpdatedAt.ToString("dd/MM/yyyy")</td>
                 <td>
-                    <span class="badge @(res.status.Label == "Actif" ? "bg-success" : "bg-secondary")">
-                        @res.status.Label
+                    <span class="badge @(res.Status ? "bg-success" : "bg-secondary")">
+                        @res.Status
                     </span>
                 </td>
 
@@ -51,11 +51,15 @@
                     <a asp-action="Editer" asp-route-id="@res.Id" class="btn btn-sm btn-warning me-2">
                         <i class="bi bi-pencil"></i>
                     </a>
-                    <a asp-action="ToggleStatut" asp-route-id="@res.Id"
-                       class="btn btn-sm @(res.status.Label == "Actif" ? "btn-outline-secondary" : "btn-outline-success")"
-                       onclick="return confirm('@(res.status.Label == "Actif" ? "Désactiver" : "Réactiver") cette ressource ?')">
-                        <i class="bi @(res.status.Label == "Actif" ? "bi-eye-slash" : "bi-eye")"></i>
+                    <a asp-action="ToggleStatut"
+                       asp-route-id="@res.Id"
+                       asp-route-search="@ViewBag.Search"
+                       asp-route-page="@ViewBag.Page"
+                       class="btn btn-sm @(res.Status ? "btn-outline-secondary" : "btn-outline-success")"
+                       onclick="return confirm('@(res.Status ? "Désactiver" : "Réactiver") cette ressource ?')">
+                        <i class="bi @(res.Status ? "bi-eye-slash" : "bi-eye")"></i>
                     </a>
+
                 </td>
             </tr>
         }

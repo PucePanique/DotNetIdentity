@@ -47,16 +47,10 @@ namespace DotNetIdentity.Models
         /// <summary>
         /// Obtient ou définit la date de mise à jour de la ressource.
         /// </summary>
-        public DateTime UpdatedAt { get; set; }
-        /// <summary>
-        /// Obtient ou définit l'identifiant du statut de la ressource (par exemple, "Active", "Inactive", "Archived").
-        /// </summary>
-        [ForeignKey(nameof(status))]
-        [Column("StatuId")]        
-        public int StatuId { get; set; }
+        public DateTime UpdatedAt { get; set; }        
         /// <summary>
         /// Obtient ou définit le statut de la ressource.
         /// </summary>
-        public Status status { get; set; } = new();
+        public bool Status { get; set; }
     }
 }
