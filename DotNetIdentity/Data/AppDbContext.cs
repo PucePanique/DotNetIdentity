@@ -33,8 +33,7 @@ namespace DotNetIdentity.Data
         public DbSet<Images> Images { get; set; }
         public DbSet<RessourcesImages> RessourcesImages { get; set; }
         public DbSet<Tags> Tags { get; set; }
-        public DbSet<RessourcesTags> RessourcesTags { get; set; }
-        public DbSet<Status> Status { get; set; }
+        public DbSet<RessourcesTags> RessourcesTags { get; set; }        
         /// <summary>
         /// IConfiguration property
         /// </summary>

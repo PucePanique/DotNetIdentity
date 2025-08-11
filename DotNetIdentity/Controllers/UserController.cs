@@ -257,7 +257,9 @@ namespace DotNetIdentity.Controllers
                         var returnUrl = TempData["ReturnUrl"];
                         if (returnUrl != null)
                         {
-                            return Redirect(returnUrl.ToString() ?? "/");
+                            //ToDo: Problème de redirection (redirige toujour sur Ressources/CréationRessource)
+                            //return Redirect(returnUrl.ToString() ?? "/");
+                            return RedirectToAction("Index", "Ressources");
                         }
                         if (User.IsInRole("Admin"))
                             return RedirectToAction("Index", "Ressources");

@@ -1,0 +1,81 @@
+﻿@model IEnumerable<RessourcesVM>
+@{
+    ViewData["Title"] = "Liste des ressources";
+    Layout = "_MainLayout";
+}
+
+<h2 class="mb-4">📄 Liste des ressources</h2>
+<form method="get" asp-action="Liste" class="mb-3 d-flex">
+    <input type="text" name="search" value="@ViewBag.Search" class="form-control me-2" placeholder="Rechercher..." />
+    <button type="submit" class="btn btn-primary">🔍</button>
+</form>
+<table class="table table-bordered table-striped table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>@Html.DisplayNameFor(m => m.ImagePath)</th>
+            <th>@Html.DisplayNameFor(m => m.Title)</th>
+            <th>@Html.DisplayNameFor(m => m.Category)</th>
+            <th>@Html.DisplayNameFor(m => m.Url)</th>
+            <th>@Html.DisplayNameFor(m => m.CreatedBy)</th>
+            <th>@Html.DisplayNameFor(m => m.CreatedAt)</th>
+            <th>@Html.DisplayNameFor(m => m.UpdatedBy)</th>
+            <th>@Html.DisplayNameFor(m => m.UpdatedAt)</th>
+            <th>@Html.DisplayNameFor(m => m.Status)</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var res in Model)
+        {
+            <tr>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(res.ImagePath))
+                    {
+                        <img src="@Url.Content(res.ImagePath)" alt="image" width="80" height="60" style="object-fit:cover;" />
+                    }
+                </td>
+                <td>@res.Title</td>
+                <td>@res.Category</td>
+                <td><a href="@res.Url" Target="_blank">@res.Url</a></td>
+                <td>@res.CreatedBy</td>
+                <td>@res.CreatedAt.ToString("dd/MM/yyyy")</td>
+                <td>@res.UpdatedBy</td>
+                <td>@res.UpdatedAt.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <span class="badge @(res.Status ? "bg-success" : "bg-secondary")">
+                        @res.Status
+                    </span>
+                </td>
+
+                <td>
+                    <a asp-action="Modifiaction" asp-route-id="@res.Id" class="btn btn-sm btn-warning me-2">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a asp-action="ToggleStatut"
+                       asp-route-id="@res.Id"
+                       asp-route-search="@ViewBag.Search"
+                       asp-route-page="@ViewBag.Page"
+                       class="btn btn-sm @(res.Status ? "btn-outline-secondary" : "btn-outline-success")"
+                       onclick="return confirm('@(res.Status ? "Désactiver" : "Réactiver") cette ressource ?')">
+                        <i class="bi @(res.Status ? "bi-eye-slash" : "bi-eye")"></i>
+                    </a>
+
+                </td>
+            </tr>
+        }
+    </tbody>        
+</table>
+@if ((int)ViewBag.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(i == (int)ViewBag.Page ? "active" : "")">
+                    <a class="page-link" href="?page=@i&search=@ViewBag.Search">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+

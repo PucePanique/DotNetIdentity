@@ -14,5 +14,8 @@
         /// Données binaires de l'image.
         /// </summary>
         public string? Image { get; set; }
+
+        // Navigation to join table
+        public ICollection<RessourcesImages> RessourcesImages { get; set; } = new List<RessourcesImages>();
     }
 }

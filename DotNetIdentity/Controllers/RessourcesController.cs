@@ -10,15 +10,38 @@ using SkiaSharp;
 
 namespace DotNetIdentity.Controllers
 {
+    /// <summary>
+    /// Contrôleur responsable de la gestion des ressources, incluant leur création,
+    /// affichage, modification de statut et gestion côté administrateur.
+    /// </summary>
     public class RessourcesController : Controller
     {
+        /// <summary>
+        /// Contexte de base de données utilisé pour accéder aux entités.
+        /// </summary>
         private readonly AppDbContext _Context;
-        public RessourcesController(AppDbContext Context)
+        /// <summary>
+        /// Property of type ILogger
+        /// </summary>
+        private readonly ILogger<UserController> _logger;
+
+        /// <summary>
+        /// Initialise une nouvelle instance du contrôleur <see cref="RessourcesController"/>.
+        /// </summary>
+        /// <param name="Context">Le contexte de base de données.</param>
+        /// <param name="logger">L'instance du logger pour le suivi des opérations.</param>
+        public RessourcesController(AppDbContext Context, ILogger<UserController> logger)
         {
             _Context = Context;
+            _logger = logger;
         }
 
-        // Remplacement de la ligne problématique dans la méthode Index
+        /// <summary>
+        /// Affiche la liste des ressources actives côté public avec recherche optionnelle et limitation.
+        /// </summary>
+        /// <param name="search">Chaîne de recherche appliquée sur le titre et la description.</param>
+        /// <param name="take">Nombre maximum de ressources à afficher.</param>
+        /// <returns>Vue contenant les ressources filtrées.</returns>
         public async Task<IActionResult> Index(string search = "", int take = 6)
         {
             var ressourcesQuery = from res in _Context.Ressources
@@ -35,9 +58,10 @@ namespace DotNetIdentity.Controllers
                                       CreatedAt = res.CreatedAt,
                                       UpdatedBy = res.UpdatedBy,
                                       UpdatedAt = res.UpdatedAt,
-                                      StatuId = res.StatuId,
+                                      Status = res.Status,
                                       ImagePath = img.Image
                                   };
+            ressourcesQuery = ressourcesQuery.Where(r => r.Status);
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -58,46 +82,51 @@ namespace DotNetIdentity.Controllers
         }
 
 
-        // GET: RessourcesController/Create
-        public async Task<ActionResult> Creer()
+        /// <summary>
+        /// Affiche le formulaire de création d'une ressource.
+        /// </summary>
+        /// <returns>Vue contenant le formulaire de création.</returns>
+        public async Task<IActionResult> Creer()
         {
             RessourcesVM rvm = new() { Title = "" };
-            List<Status> statusList = await _Context.Status.ToListAsync();
-            rvm.StatusList = new SelectList(statusList, "Id", "Label");
+
             return View(rvm);
         }
 
+        /// <summary>
+        /// Traite la soumission du formulaire de création d'une ressource.
+        /// </summary>
+        /// <param name="ressourceVm">Objet ViewModel contenant les données de la ressource.</param>
+        /// <param name="pic">Fichier image associé à la ressource.</param>
+        /// <returns>Vue de confirmation ou formulaire en cas d'erreur.</returns>
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> CreerRessource(RessourcesVM ressourceVm, IFormFile pic)
+        public async Task<IActionResult> CreerRessource(RessourcesVM ressourceVm, IFormFile pic)
         {
             string FilePath = "";
+            string[] allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp" };
+            string[] allowedContentTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp" };
 
             if (pic is not null)
             {
                 string NomImg = Path.GetFileName(pic.FileName);
-                string ext = Path.GetExtension(pic.FileName);
+                string ext = Path.GetExtension(pic.FileName).ToLowerInvariant();
 
-                if (ext == ".jpg" || ext == ".png" || ext == ".jpeg")
+                if (!allowedExtensions.Contains(ext) || !allowedContentTypes.Contains(pic.ContentType))
                 {
-
-                    string relativePath = Path.Combine("/assets/RessourcesImages", NomImg); // pour le HTML
-                    string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/RessourcesImages", NomImg); // pour sauvegarder sur le disque
-
-                    using (var stream = new FileStream(absolutePath, FileMode.Create))
-                    {
-                        await pic.CopyToAsync(stream);
-                        stream.Close();
-                    }
-
-                    FilePath = relativePath; // ici tu stockes le chemin relatif accessible par le client
-
-                }
-                else
-                {
-                    ModelState.AddModelError("Image", "Le format de l'image n'est pas supporté. Veuillez utiliser .jpg, .png ou .jpeg.");
+                    ModelState.AddModelError("Image", "Format d'image non supporté. Formats autorisés : jpg, jpeg, png, webp, gif, bmp.");
                     return View("Creer", ressourceVm);
                 }
+
+                string relativePath = Path.Combine("/assets/RessourcesImages", NomImg);
+                string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/RessourcesImages", NomImg);
+
+                using (var stream = new FileStream(absolutePath, FileMode.Create))
+                {
+                    await pic.CopyToAsync(stream);
+                }
+
+                FilePath = relativePath;
             }
 
             if (ModelState.IsValid)
@@ -112,25 +141,19 @@ namespace DotNetIdentity.Controllers
                         Category = ressourceVm.Category,
                         CreatedAt = DateTime.Now,
                         CreatedBy = User.Identity?.Name ?? "Inconnu",
-                        StatuId = ressourceVm.StatuId
+                        Status = ressourceVm.Status
                     };
 
                     await _Context.Ressources.AddAsync(Ressource);
 
                     Images Images = new()
                     {
-                        Image = FilePath,
+                        Image = FilePath
                     };
 
                     await _Context.Images.AddAsync(Images);
                     await _Context.SaveChangesAsync();
 
-                    Ressource = await _Context.Ressources
-                        .OrderByDescending(r => r.CreatedAt)
-                        .FirstOrDefaultAsync();
-                    Images = await _Context.Images
-                        .OrderByDescending(i => i.Id)
-                        .FirstOrDefaultAsync();
                     RessourcesImages ressourceImage = new()
                     {
                         RessourceId = Ressource.Id,
@@ -139,57 +162,148 @@ namespace DotNetIdentity.Controllers
                     await _Context.RessourcesImages.AddAsync(ressourceImage);
 
                     await _Context.SaveChangesAsync();
+                    _logger.LogWarning("CREATE: User " + User.Identity!.Name + " Ressource créé.");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    throw;
+
                 }
             }
 
-            return RedirectToAction(nameof(RessourcesController.Creer));
+            return View(nameof(RessourcesController.Creer));
         }
 
-
-        // GET: RessourcesController/Edit/5
-        public ActionResult Edit(int id)
+        /// <summary>
+        /// Liste les ressources côté administrateur avec pagination et recherche.
+        /// </summary>
+        /// <param name="search">Chaîne de recherche appliquée sur le titre, la description et l'URL.</param>
+        /// <param name="page">Numéro de page actuelle.</param>
+        /// <returns>Vue affichant les ressources paginées et filtrées.</returns>
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Liste(string search = "", int page = 1)
         {
-            return View();
+            const int pageSize = 10;
+
+            var baseQuery = _Context.Ressources
+                .Include(r => r.RessourcesImages)
+                    .ThenInclude(ri => ri.Images)
+                .AsQueryable();
+
+            // Option de recherche
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                baseQuery = baseQuery.Where(r =>
+                    r.Title.Contains(search) ||
+                    r.Description.Contains(search) ||
+                    r.Url.Contains(search));
+            }
+
+            int totalItems = await baseQuery.CountAsync();
+
+            // Projection vers RessourcesVM
+            var ressources = await baseQuery
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new RessourcesVM
+                {
+                    Id = r.Id,
+                    Title = r.Title,
+                    Description = r.Description,
+                    Url = r.Url,
+                    Category = r.Category,
+                    CreatedBy = r.CreatedBy,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedBy = r.UpdatedBy,
+                    UpdatedAt = r.UpdatedAt,
+                    Status = r.Status,
+                    ImagePath = r.RessourcesImages
+                        .Select(ri => ri.Images.Image)
+                        .FirstOrDefault() // Première image liée
+                })
+                .ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.Page = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return View(ressources);
+
         }
 
-        // POST: RessourcesController/Edit/5
+        /// <summary>
+        /// Active ou désactive une ressource selon son identifiant.
+        /// </summary>
+        /// <param name="id">Identifiant unique de la ressource à modifier.</param>
+        /// <param name="search">Chaîne de recherche courante à conserver.</param>
+        /// <param name="page">Page courante à conserver.</param>
+        /// <returns>Redirection vers la liste des ressources avec les paramètres préservés.</returns>
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ToggleStatut(int id, string search = "", int page = 1)
+        {
+            var ressource = await _Context.Ressources.FindAsync(id);
+            if (ressource == null)
+                return NotFound();
+
+            ressource.Status = !ressource.Status;
+            ressource.UpdatedAt = DateTime.Now;
+            ressource.UpdatedBy = User.Identity?.Name ?? "System";
+
+            await _Context.SaveChangesAsync();
+            _logger.LogWarning("UPD: User " + User.Identity!.Name + ", Ressource " + ressource.Id + " Status de ressource mis à jours.");
+            return RedirectToAction(nameof(Liste), new { search, page });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> Modifiaction(int id)
+        {
+            RessourcesVM ressource = await _Context.Ressources
+                .Include(r => r.RessourcesImages)
+                    .ThenInclude(ri => ri.Images)
+                    .Where(r => r.Id == id)
+                    .Select(r => new RessourcesVM
+                    {
+                        Title = r.Title,
+                        Description = r.Description,
+                        Url = r.Url,
+                        Category = r.Category,
+                        ImageId = r.RessourcesImages.FirstOrDefault().ImageId,
+                        ImagePath = r.RessourcesImages
+                        .Select(ri => ri.Images.Image)
+                        .FirstOrDefault()
+                    }).SingleOrDefaultAsync() ?? new RessourcesVM { Title = "" };
+            ;
+
+            return View(ressource);
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> ModifierRessource(RessourcesVM ressourcesVM)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
+            var ressource = await _Context.Ressources.FindAsync(ressourcesVM.Id);
 
-        // GET: RessourcesController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
 
-        // POST: RessourcesController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            if (ressource == null)
+                return NotFound();
+
+            ressource.Title = ressourcesVM.Title;
+            ressource.Description = ressourcesVM.Description;
+            ressource.Url = ressourcesVM.Url;
+            ressource.Category = ressourcesVM.Category;
+
+            _Context.Ressources.Update(ressource);
+
+            var Image = await _Context.Images.FindAsync(ressourcesVM.ImageId);
+            if (Image == null)
+                return NotFound();
+
+            Image.Image = ressourcesVM.ImagePath;
+            _Context.Images.Update(Image);
+
+            return View(nameof(Modifiaction),ressourcesVM);
         }
     }
 }

@@ -18,6 +18,6 @@ namespace DotNetIdentity.Models
 
         // Navigation properties can be added if needed
         public virtual Ressources Ressources { get; set; }
-        public virtual Images Images { get; set; }
+        public virtual Images Images { get; set; }       
     }
 }
