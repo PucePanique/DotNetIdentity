@@ -1,5 +1,59 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model RessourcesVM
 @{
+	ViewData["Title"] = "Modification d'une ressource";
+	Layout = "_MainLayout";
 }
+
+<div class="row">
+	<div class="col-md-12">
+		<form asp-action="ModifierRessource" enctype="multipart/form-data" class="d-flex flex-wrap justify-content-start align-items-stretch" style="display:flex;">
+			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+			<input type="hidden" asp-for="Id" class="form-control" />			
+			<input type="hidden" asp-for="ImageId" class="form-control" />			
+
+			<div class="form-group m-2">
+				<required-label asp-for="Title" />
+				<input asp-for="Title" class="form-control" />
+				<span asp-validation-for="Title" class="text-danger"></span>
+			</div>
+
+			<div class="form-group m-2">
+				<required-label asp-for="Description" />
+				<input type="text" asp-for="Description" class="form-control" />
+				<span asp-validation-for="Description" class="text-danger"></span>
+			</div>
+
+			<div class="form-group m-2">
+				<required-label asp-for="Url" />
+				<input asp-for="Url" class="form-control" />
+				<span asp-validation-for="Url" class="text-danger"></span>
+			</div>
+
+			<div class="form-group m-2">
+				<required-label asp-for="Category" />
+				<input asp-for="Category" class="form-control" />
+				<span asp-validation-for="Category" class="text-danger"></span>
+			</div>			
+			<div class="form-group m-2">
+				<required-label asp-for="ImagePath" />
+				<input asp-for="ImagePath" type="file" name="pic" class="form-control" />
+				<input type="hidden" asp-for="ImagePath" class="form-control" />
+
+				<span asp-validation-for="ImagePath" class="text-danger"></span>
+
+				@if (!string.IsNullOrEmpty(Model.ImagePath))
+				{
+					<div class="mt-2">
+						<label>Image actuelle :</label><br />
+						<img src="@Model.ImagePath" alt="Image actuelle" style="max-width: 200px; max-height: 200px;" />
+					</div>
+				}
+			</div>
+
+			<div class="form-group m-3">
+				<input type="submit" value="Enregistrer" class="btn btn-primary" />
+			</div>
+		</form>		
+	</div>
+</div>
+
