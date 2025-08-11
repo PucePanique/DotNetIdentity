@@ -1,0 +1,56 @@
+@startuml 'Diagramme de classe'
+
+Package Controller <<Node>>{
+    Class RessourcesController {
+        - AppDbContext _Context
+        - ILogger<UserController> _Logger
+
+        + RessourcesController(AppDbContext,ILogger<UserController>)
+        + async Task<IActionresult> Index(string, int) 
+        + async Task<IActionresult> CreerRessource(RessourcesVM, IFormFile)
+        + async Task<IActionresult> Modifier() 
+        + async Task<IActionResult> Liste(string, int)
+        + async Task<IActionResult> ToggleStatut(int)
+    }
+}
+
+Package Model <<Database>>{
+    Class Ressources{
+        + int Id
+        + string Title
+        + string Description
+        + string Url
+        + string Category
+        + string CreatedBy
+        + DateTime CreatedAt
+        + string UpdatedBy
+        + DateTime UpdatedAt
+        + bool Status
+    }
+
+    Class RessourcesVM{
+        + string ImagePath    
+        + SelectList StatusList 
+    }
+
+    Class RessourcesImages{
+        + int RessourceId    
+        + int ImageId 
+    }
+
+    Class Images{
+        + int Id
+        + string Image
+    }
+
+    Class Tags{
+        + int Id
+        + string Label
+    }
+}
+
+
+Ressources <|-- RessourcesVM
+RessourcesVM -- RessourcesImages
+RessourcesController -- RessourcesVM
+@enduml
