@@ -186,4 +186,10 @@
   <data name="23" xml:space="preserve">
     <value>Activités</value>
   </data>
+  <data name="24" xml:space="preserve">
+    <value>Exercice de respiration</value>
+  </data>
+  <data name="25" xml:space="preserve">
+    <value>Tracker d’émotions</value>
+  </data>
 </root>
