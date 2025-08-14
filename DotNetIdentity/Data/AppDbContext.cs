@@ -6,6 +6,7 @@ using DotNetIdentity.Models.DataModels;
 using System.ComponentModel.DataAnnotations.Schema;
 using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
 using DotNetIdentity.Models.CesiZenModels.Respiration;
+using DotNetIdentity.Models.CesiZenModels.DiagnosticModels;
 
 namespace DotNetIdentity.Data
 {
@@ -39,6 +40,10 @@ namespace DotNetIdentity.Data
         public DbSet<Sessions> Sessions { get; set; }
         public DbSet<ExerciceConfigurations> ExerciceConfigurations { get; set; }
         public DbSet<Exercices> Exercices { get; set; }
+
+        public DbSet<DiagnosticSessions> DiagnosticSessions { get; set; }
+        public DbSet<DiagnosticReponses> DiagnosticReponses { get; set; }
+        public DbSet<DiagnosticEvenements> DiagnosticEvenements { get; set; }
         /// <summary>
         /// IConfiguration property
         /// </summary>

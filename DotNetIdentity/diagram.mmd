@@ -1,15 +1,13 @@
 classDiagram
-class DiagnosticQuestionnaireVM
+class DiagnosticQuestionnaireVM{
+  +Int32 TotalPoints
+}
 
-class DiagnosticEvenements{
+class EvenementReponseVM{
   +Int32 Id
   +String Nom
   +Int32 Points
-}
-
-class DiagnosticResultatVM{
-  +Int32 ScoreTotal
-  +String Interpretation
+  +Boolean Selectionne
 }
 
 class RessourcesVM{
@@ -114,6 +112,12 @@ class AppUser{
   +Int32 AccessFailedCount
 }
 
+class DiagnosticEvenements{
+  +Int32 Id
+  +String Nom
+  +Int32 Points
+}
+
 class DiagnosticReponses{
   +Int32 Id
   +Int32 DiagnosticSessionId
@@ -128,9 +132,9 @@ class DiagnosticSessions{
   +String UserId
 }
 
-DiagnosticQuestionnaireVM "0" o-- "*" DiagnosticEvenements
-DiagnosticResultatVM "0" o-- "*" DiagnosticEvenements
-DiagnosticQuestionnaireVM <|-- DiagnosticResultatVM
+class <>c
+
+DiagnosticQuestionnaireVM "0" o-- "*" EvenementReponseVM
 Ressources <|-- RessourcesVM
 RessourcesImages o-- Ressources
 RessourcesImages o-- Images

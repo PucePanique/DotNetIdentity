@@ -1,0 +1,23 @@
+﻿@model DotNetIdentity.Models.CesiZenModels.ViewModels.DiagnosticQuestionnaireVM
+
+<div class="p-4 max-w-md mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Questionnaire de stress</h1>
+
+    <form method="post" class="space-y-3">
+        @for (int i = 0; i < Model.Evenements.Count; i++)
+        {
+            <div class="flex items-center space-x-2 border-b pb-2">
+                <input type="checkbox" asp-for="@Model.Evenements[i].Selectionne" class="w-5 h-5" />
+                <label class="flex-1" asp-for="@Model.Evenements[i].Selectionne">
+                    @Model.Evenements[i].Nom (@Model.Evenements[i].Points pts)
+                </label>
+                <input type="hidden" asp-for="@Model.Evenements[i].Id" />
+                <input type="hidden" asp-for="@Model.Evenements[i].Nom" />
+                <input type="hidden" asp-for="@Model.Evenements[i].Points" />
+            </div>
+        }
+        <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+            Valider
+        </button>
+    </form>
+</div>
