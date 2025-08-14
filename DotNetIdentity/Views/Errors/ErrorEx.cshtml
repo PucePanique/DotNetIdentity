@@ -101,9 +101,9 @@ input:focus,
             <div class="inner">
                 <!--BEGIN CONTENT-->
                 <div class="inner-circle"><i class="bi bi-shield-fill-exclamation" data-bs-toggle="modal" data-bs-target="#stackTrace"></i><span>500</span></div>
-                <span class="inner-status">@L["1"] @ViewBag.ErrorMessage</span>
+                <environment names="Development"><span class="inner-status">@L["1"] @ViewBag.ErrorMessage</span></environment>
                 <span class="inner-detail">@L["2"]</span>
-                <a class="btn btn-primary btn-block btn-lg shadow-sm mt-5" href="/User/Login">@L["3"]</a>
+                <a class="btn btn-primary btn-block btn-lg shadow-sm mt-5" href="/Ressources/Index">@L["3"]</a>
                 <!--END CONTENT-->
             </div>
         </div>

@@ -1,0 +1,142 @@
+classDiagram
+class ExerciceConfigurations{
+  +Int32 Id
+  +Int32 ExerciceId
+  +String Label
+  +Int32 InhaleDuration
+  +Int32 HoldDuration
+  +Int32 ExhaleDuration
+}
+
+class Exercices{
+  +Int32 Id
+  +String Name
+  +String Description
+}
+
+class Sessions{
+  +Int32 Id
+  +Int32 Cycles
+  +DateTime StartedAt
+  +`Nullable<DateTime>` EndedAt
+  +Int32 ExerciceConfigurationId
+  +String UserId
+}
+
+class AppUser{
+  +TwoFactorType TwoFactorType
+  +DateTime BirthDay
+  +Gender Gender
+  +DateTime CreatedOn
+  +String FirstName
+  +String LastName
+  +Boolean IsMfaForce
+  +Boolean IsLdapLogin
+  +String Department
+  +String ProfilePicture
+  +Boolean IsEnabled
+  +String RolesCombined
+  +String Id
+  +String UserName
+  +String NormalizedUserName
+  +String Email
+  +String NormalizedEmail
+  +Boolean EmailConfirmed
+  +String PasswordHash
+  +String SecurityStamp
+  +String ConcurrencyStamp
+  +String PhoneNumber
+  +Boolean PhoneNumberConfirmed
+  +Boolean TwoFactorEnabled
+  +`Nullable<DateTimeOffset>` LockoutEnd
+  +Boolean LockoutEnabled
+  +Int32 AccessFailedCount
+}
+
+class DiagnosticQuestionnaireVM
+
+class DiagnosticEvenement{
+  +Int32 Id
+  +String Nom
+  +Int32 Points
+}
+
+class DiagnosticResultatVM{
+  +Int32 ScoreTotal
+  +String Interpretation
+}
+
+class RessourcesVM{
+  +String ImagePath
+  +`Nullable<Int32>` ImageId
+  +Int32 Id
+  +String Title
+  +String Description
+  +String Url
+  +String Category
+  +String CreatedBy
+  +DateTime CreatedAt
+  +String UpdatedBy
+  +DateTime UpdatedAt
+  +Boolean Status
+}
+
+class Ressources{
+  +Int32 Id
+  +String Title
+  +String Description
+  +String Url
+  +String Category
+  +String CreatedBy
+  +DateTime CreatedAt
+  +String UpdatedBy
+  +DateTime UpdatedAt
+  +Boolean Status
+}
+
+class Images{
+  +Int32 Id
+  +String Image
+}
+
+class RessourcesImages{
+  +Int32 RessourceId
+  +Int32 ImageId
+}
+
+class RessourcesTags{
+  +Int32 RessourceId
+  +Int32 TagId
+}
+
+class Tags{
+  +Int32 Id
+  +String Label
+}
+
+class DiagnosticResultat{
+  +Int32 Id
+  +String UserId
+  +DateTime DateSoumission
+  +Int32 ScoreTotal
+}
+
+class DiagnosticResultatEvenement{
+  +Int32 Id
+  +Int32 DiagnosticResultatId
+  +Int32 DiagnosticEvenementId
+}
+
+ExerciceConfigurations o-- Exercices
+Sessions o-- ExerciceConfigurations
+Sessions o-- AppUser
+DiagnosticQuestionnaireVM "0" o-- "*" DiagnosticEvenement
+DiagnosticResultatVM "0" o-- "*" DiagnosticEvenement
+DiagnosticQuestionnaireVM <|-- DiagnosticResultatVM
+Ressources <|-- RessourcesVM
+RessourcesImages o-- Ressources
+RessourcesImages o-- Images
+RessourcesTags o-- Ressources
+RessourcesTags o-- Tags
+DiagnosticResultatEvenement o-- DiagnosticResultat
+DiagnosticResultatEvenement o-- DiagnosticEvenement

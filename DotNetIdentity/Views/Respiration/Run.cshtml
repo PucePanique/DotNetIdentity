@@ -1,0 +1,199 @@
+﻿@using DotNetIdentity.Models.CesiZenModels
+@model Sessions
+@{
+    ViewData["Title"] = "Exercice en cours";
+
+    var inhale = Model.ExerciceConfiguration?.InhaleDuration ?? 5;
+    var hold = Model.ExerciceConfiguration?.HoldDuration ?? 0;
+    var exhale = Model.ExerciceConfiguration?.ExhaleDuration ?? 5;
+
+    // Nombre max de cycles (exemple 5, tu peux changer)
+    int maxCycles = 5;
+}
+
+<style>
+    /* ... mêmes styles qu'avant ... */
+    body {
+        background: linear-gradient(135deg, #d0e8f2, #f0f4f8);
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .breathing-wrapper {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: auto;
+    }
+
+    #circle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 140px;
+        height: 140px;
+        transform: translate(-50%, -50%) scale(1);
+        background: radial-gradient(circle, #6ec6ff, #2196f3);
+        border-radius: 50%;
+        box-shadow: 0 0 40px rgba(33, 150, 243, 0.4);
+        transition: transform ease-in-out;
+    }
+
+    .progress-ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-90deg);
+    }
+
+    #phase {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.25rem;
+        color: #1e40af;
+        z-index: 10;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    .fade {
+        opacity: 0;
+    }
+
+    #back-button {
+        display: none;
+        margin-top: 30px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+        background-color: #1565c0;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    #back-button:hover {
+        background-color: #0d3c75;
+    }
+</style>
+
+<div class="min-h-screen p-4 text-center">
+    <h1 class="text-3xl font-bold mb-6 text-blue-700">Cohérence cardiaque</h1>
+
+    <div class="d-flex justify-content-center align-items-center">
+        <div class="breathing-wrapper">
+            <div id="circle"></div>
+
+            <svg class="progress-ring" width="200" height="200">
+                <circle cx="100" cy="100" r="90"
+                        stroke="#bbdefb"
+                        stroke-width="8"
+                        fill="none" />
+                <circle id="progress"
+                        cx="100" cy="100" r="90"
+                        stroke="#1565c0"
+                        stroke-width="8"
+                        fill="none"
+                        stroke-dasharray="565"
+                        stroke-dashoffset="565"
+                        stroke-linecap="round" />
+            </svg>
+
+            <p id="phase">Inspiration</p>
+        </div>
+    </div>
+
+    <button id="back-button" onclick="history.back()">Retour</button>
+</div>
+
+<script>
+    const config = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+        inhale = inhale * 1000,
+        hold = hold * 1000,
+        exhale = exhale * 1000,
+        maxCycles = maxCycles
+    }));
+
+    const inhale = config.inhale;
+    const hold = config.hold;
+    const exhale = config.exhale;
+    const maxCycles = config.maxCycles;
+
+    const circle = document.getElementById("circle");
+    const phase = document.getElementById("phase");
+    const progress = document.getElementById("progress");
+    const backButton = document.getElementById("back-button");
+    const circumference = 2 * Math.PI * 90;
+
+    function delay(ms) {
+        return new Promise(r => setTimeout(r, ms));
+    }
+
+    function animateProgress(duration) {
+        return new Promise(resolve => {
+            let start = null;
+            function step(timestamp) {
+                if (!start) start = timestamp;
+                let elapsed = timestamp - start;
+                let fraction = elapsed / duration;
+                if (fraction > 1) fraction = 1;
+
+                let offset = circumference * (1 - fraction);
+                progress.style.strokeDashoffset = offset;
+
+                if (fraction < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    resolve();
+                }
+            }
+            progress.style.strokeDasharray = circumference;
+            progress.style.strokeDashoffset = circumference;
+            requestAnimationFrame(step);
+        });
+    }
+
+    function phaseChange(text) {
+        phase.classList.add("fade");
+        setTimeout(() => {
+            phase.textContent = text;
+            phase.classList.remove("fade");
+        }, 300);
+    }
+
+    async function breathingCycle() {
+        // Inspiration
+        phaseChange("Inspiration");
+        circle.style.transitionDuration = `${inhale}ms`;
+        circle.style.transform = "translate(-50%, -50%) scale(1.5)";
+        await Promise.all([delay(inhale), animateProgress(inhale)]);
+
+        // Apnée
+        if (hold > 0) {
+            phaseChange("Apnée");
+            await Promise.all([delay(hold), animateProgress(hold)]);
+        }
+
+        // Expiration
+        phaseChange("Expiration");
+        circle.style.transitionDuration = `${exhale}ms`;
+        circle.style.transform = "translate(-50%, -50%) scale(1)";
+        await Promise.all([delay(exhale), animateProgress(exhale)]);
+    }
+
+    async function startBreathing() {
+        let cycleCount = 0;
+        while (cycleCount < maxCycles) {
+            await breathingCycle();
+            cycleCount++;
+        }
+        // Fin de la session, afficher bouton retour
+        phaseChange("Session terminée");
+        backButton.style.display = "inline-block";
+    }
+
+    startBreathing();
+</script>
