@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using DotNetIdentity.Models.DataModels;
 using System.ComponentModel.DataAnnotations.Schema;
-using DotNetIdentity.Models;
+using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
 
 namespace DotNetIdentity.Data
 {

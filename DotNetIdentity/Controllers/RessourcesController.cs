@@ -1,6 +1,6 @@
 ﻿using DotNetIdentity.Data;
-using DotNetIdentity.Models;
-using DotNetIdentity.Models.ViewModels;
+using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
+using DotNetIdentity.Models.CesiZenModels.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;

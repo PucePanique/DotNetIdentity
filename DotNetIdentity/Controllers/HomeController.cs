@@ -1,4 +1,4 @@
-﻿using DotNetIdentity.Models;
+﻿using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
 using DotNetIdentity.Models.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

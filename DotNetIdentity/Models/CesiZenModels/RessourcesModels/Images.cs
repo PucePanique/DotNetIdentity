@@ -1,4 +1,4 @@
-﻿namespace DotNetIdentity.Models
+﻿namespace DotNetIdentity.Models.CesiZenModels.RessourcesModels
 {
     /// <summary>
     /// Représente une image avec un identifiant et des données binaires.

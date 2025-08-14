@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DotNetIdentity.Models
+namespace DotNetIdentity.Models.CesiZenModels.RessourcesModels
 {
     /// <summary>
     /// Représente une ressource avec ses propriétés principales, telles que le titre, la description, l'URL, la catégorie, l'image, les informations de création et de mise à jour, ainsi que le statut.

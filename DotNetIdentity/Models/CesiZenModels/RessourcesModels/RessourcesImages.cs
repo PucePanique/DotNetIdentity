@@ -3,7 +3,7 @@ using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DotNetIdentity.Models
+namespace DotNetIdentity.Models.CesiZenModels.RessourcesModels
 {
     [PrimaryKey("RessourceId", "ImageId")]
     public class RessourcesImages

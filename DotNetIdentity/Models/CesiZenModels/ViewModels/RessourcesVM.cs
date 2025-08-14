@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 
-namespace DotNetIdentity.Models.ViewModels
+namespace DotNetIdentity.Models.CesiZenModels.ViewModels
 {
     /// <summary>
     /// ViewModel combinant une ressource et son image associée.
