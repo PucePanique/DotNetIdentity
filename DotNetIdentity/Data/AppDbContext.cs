@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using DotNetIdentity.Models.DataModels;
 using System.ComponentModel.DataAnnotations.Schema;
 using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
+using DotNetIdentity.Models.CesiZenModels.Respiration;
 
 namespace DotNetIdentity.Data
 {
@@ -33,7 +34,11 @@ namespace DotNetIdentity.Data
         public DbSet<Images> Images { get; set; }
         public DbSet<RessourcesImages> RessourcesImages { get; set; }
         public DbSet<Tags> Tags { get; set; }
-        public DbSet<RessourcesTags> RessourcesTags { get; set; }        
+        public DbSet<RessourcesTags> RessourcesTags { get; set; }
+
+        public DbSet<Sessions> Sessions { get; set; }
+        public DbSet<ExerciceConfigurations> ExerciceConfigurations { get; set; }
+        public DbSet<Exercices> Exercices { get; set; }
         /// <summary>
         /// IConfiguration property
         /// </summary>
