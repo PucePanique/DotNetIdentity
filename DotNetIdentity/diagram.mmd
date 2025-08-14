@@ -1,61 +1,7 @@
 classDiagram
-class ExerciceConfigurations{
-  +Int32 Id
-  +Int32 ExerciceId
-  +String Label
-  +Int32 InhaleDuration
-  +Int32 HoldDuration
-  +Int32 ExhaleDuration
-}
-
-class Exercices{
-  +Int32 Id
-  +String Name
-  +String Description
-}
-
-class Sessions{
-  +Int32 Id
-  +Int32 Cycles
-  +DateTime StartedAt
-  +`Nullable<DateTime>` EndedAt
-  +Int32 ExerciceConfigurationId
-  +String UserId
-}
-
-class AppUser{
-  +TwoFactorType TwoFactorType
-  +DateTime BirthDay
-  +Gender Gender
-  +DateTime CreatedOn
-  +String FirstName
-  +String LastName
-  +Boolean IsMfaForce
-  +Boolean IsLdapLogin
-  +String Department
-  +String ProfilePicture
-  +Boolean IsEnabled
-  +String RolesCombined
-  +String Id
-  +String UserName
-  +String NormalizedUserName
-  +String Email
-  +String NormalizedEmail
-  +Boolean EmailConfirmed
-  +String PasswordHash
-  +String SecurityStamp
-  +String ConcurrencyStamp
-  +String PhoneNumber
-  +Boolean PhoneNumberConfirmed
-  +Boolean TwoFactorEnabled
-  +`Nullable<DateTimeOffset>` LockoutEnd
-  +Boolean LockoutEnabled
-  +Int32 AccessFailedCount
-}
-
 class DiagnosticQuestionnaireVM
 
-class DiagnosticEvenement{
+class DiagnosticEvenements{
   +Int32 Id
   +String Nom
   +Int32 Points
@@ -114,29 +60,85 @@ class Tags{
   +String Label
 }
 
-class DiagnosticResultat{
+class ExerciceConfigurations{
   +Int32 Id
-  +String UserId
-  +DateTime DateSoumission
-  +Int32 ScoreTotal
+  +String Label
+  +Int32 InhaleDuration
+  +Int32 HoldDuration
+  +Int32 ExhaleDuration
+  +Int32 ExerciceId
 }
 
-class DiagnosticResultatEvenement{
+class Exercices{
   +Int32 Id
-  +Int32 DiagnosticResultatId
+  +String Name
+  +String Description
+}
+
+class Sessions{
+  +Int32 Id
+  +Int32 Cycles
+  +DateTime StartedAt
+  +DateTime EndedAt
+  +String UserId
+  +Int32 ExerciceConfigurationId
+}
+
+class AppUser{
+  +TwoFactorType TwoFactorType
+  +DateTime BirthDay
+  +Gender Gender
+  +DateTime CreatedOn
+  +String FirstName
+  +String LastName
+  +Boolean IsMfaForce
+  +Boolean IsLdapLogin
+  +String Department
+  +String ProfilePicture
+  +Boolean IsEnabled
+  +String RolesCombined
+  +String Id
+  +String UserName
+  +String NormalizedUserName
+  +String Email
+  +String NormalizedEmail
+  +Boolean EmailConfirmed
+  +String PasswordHash
+  +String SecurityStamp
+  +String ConcurrencyStamp
+  +String PhoneNumber
+  +Boolean PhoneNumberConfirmed
+  +Boolean TwoFactorEnabled
+  +`Nullable<DateTimeOffset>` LockoutEnd
+  +Boolean LockoutEnabled
+  +Int32 AccessFailedCount
+}
+
+class DiagnosticReponses{
+  +Int32 Id
+  +Int32 DiagnosticSessionId
   +Int32 DiagnosticEvenementId
 }
 
-ExerciceConfigurations o-- Exercices
-Sessions o-- ExerciceConfigurations
-Sessions o-- AppUser
-DiagnosticQuestionnaireVM "0" o-- "*" DiagnosticEvenement
-DiagnosticResultatVM "0" o-- "*" DiagnosticEvenement
+class DiagnosticSessions{
+  +Int32 Id
+  +DateTime DateDiagnostic
+  +Int32 TotalPoints
+  +String NiveauStress
+  +String UserId
+}
+
+DiagnosticQuestionnaireVM "0" o-- "*" DiagnosticEvenements
+DiagnosticResultatVM "0" o-- "*" DiagnosticEvenements
 DiagnosticQuestionnaireVM <|-- DiagnosticResultatVM
 Ressources <|-- RessourcesVM
 RessourcesImages o-- Ressources
 RessourcesImages o-- Images
 RessourcesTags o-- Ressources
 RessourcesTags o-- Tags
-DiagnosticResultatEvenement o-- DiagnosticResultat
-DiagnosticResultatEvenement o-- DiagnosticEvenement
+ExerciceConfigurations o-- Exercices
+Sessions o-- AppUser
+Sessions o-- ExerciceConfigurations
+DiagnosticSessions o-- AppUser
+DiagnosticReponses o-- DiagnosticSessions
+DiagnosticReponses o-- DiagnosticEvenements

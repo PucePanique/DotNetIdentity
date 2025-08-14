@@ -1,11 +1,13 @@
 ﻿using DotNetIdentity.Data;
 using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
 using DotNetIdentity.Models.CesiZenModels.ViewModels;
+using MermaidClassDiagramGenerator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SkiaSharp;
+using System.Reflection;
 
 
 namespace DotNetIdentity.Controllers
@@ -77,6 +79,22 @@ namespace DotNetIdentity.Controllers
             ViewBag.Search = search;
             ViewBag.Take = take;
             ViewBag.Total = await ressourcesQuery.CountAsync();
+
+            var modelTypes = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(t => t.Namespace != null
+                            && (t.Namespace == "DotNetIdentity.Models.CesiZenModels"
+                                || t.Namespace.StartsWith("DotNetIdentity.Models.CesiZenModels.")))
+                .ToList();
+
+            var generator = new DiagramGenerator(
+                outputFilePath: "diagram.mmd",
+                assembliesToScan: new List<Assembly> { Assembly.GetExecutingAssembly() },
+                domainTypes: modelTypes,
+                generateWithoutProperties: false
+            );
+
+            generator.Generate();
 
             return View(ressources);
         }
