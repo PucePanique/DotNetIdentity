@@ -52,9 +52,5 @@ namespace DotNetIdentity.Models
         /// Obtient ou définit le statut de la ressource.
         /// </summary>
         public bool Status { get; set; }
-
-        // Navigation to join table
-        public ICollection<RessourcesImages> RessourcesImages { get; set; } = new List<RessourcesImages>();
-        public ICollection<RessourcesTags> RessourcesTags { get; set; } = new List<RessourcesTags>();
     }
 }
