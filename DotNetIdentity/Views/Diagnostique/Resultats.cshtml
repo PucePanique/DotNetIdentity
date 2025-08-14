@@ -1,0 +1,8 @@
+﻿@model DotNetIdentity.Models.CesiZenModels.DiagnosticModels.DiagnosticSessions
+
+<div class="p-4 max-w-md mx-auto text-center">
+    <h1 class="text-2xl font-bold mb-4">Résultats du diagnostic</h1>
+    <p class="text-lg">Total des points : <strong>@Model.TotalPoints</strong></p>
+    <p class="text-lg">Niveau de stress : <strong>@Model.NiveauStress</strong></p>
+    <a href="@Url.Action("Index", "Diagnostic")" class="mt-4 inline-block text-blue-600 underline">Refaire le test</a>
+</div>

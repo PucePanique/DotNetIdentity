@@ -5,9 +5,7 @@ namespace DotNetIdentity.Models.CesiZenModels.ViewModels
 {
     public class DiagnosticQuestionnaireVM
     {
-        public List<DiagnosticEvenements> Evenements { get; set; } = new();
-
-        [Required(ErrorMessage = "Vous devez sélectionner au moins un événement ou aucun si rien ne s'applique.")]
-        public List<int> EvenementsSelectionnes { get; set; } = new();
+        public List<EvenementReponseVM> Evenements { get; set; } = new();
+        public int TotalPoints => Evenements.Where(e => e.Selectionne).Sum(e => e.Points);
     }
 }
