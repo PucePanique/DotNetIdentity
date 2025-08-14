@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DotNetIdentity.Models.CesiZenModels.RessourcesModels
 {
-    [PrimaryKey("RessourceId", "ImageId")]
+    [PrimaryKey("RessourceId", "TagId")]
     public class RessourcesTags
     {
         [ForeignKey(nameof(Ressources))]        

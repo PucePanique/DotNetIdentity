@@ -3,9 +3,9 @@
 @{
     ViewData["Title"] = "Exercice en cours";
 
-    var inhale = Model.ExerciceConfiguration?.InhaleDuration ?? 5;
-    var hold = Model.ExerciceConfiguration?.HoldDuration ?? 0;
-    var exhale = Model.ExerciceConfiguration?.ExhaleDuration ?? 5;
+    var inhale = Model.ExerciceConfigurations?.InhaleDuration ?? 5;
+    var hold = Model.ExerciceConfigurations?.HoldDuration ?? 0;
+    var exhale = Model.ExerciceConfigurations?.ExhaleDuration ?? 5;
 
     // Nombre max de cycles (exemple 5, tu peux changer)
     int maxCycles = 5;
