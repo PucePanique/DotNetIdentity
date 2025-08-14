@@ -52,5 +52,7 @@ namespace DotNetIdentity.Models.CesiZenModels.RessourcesModels
         /// Obtient ou définit le statut de la ressource.
         /// </summary>
         public bool Status { get; set; }
+
+        public ICollection<RessourcesImages> RessourcesImages { get; set; } = new List<RessourcesImages>();
     }
 }
