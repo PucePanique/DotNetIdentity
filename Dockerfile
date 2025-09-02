@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
 # Copier les fichiers csproj et restaurer les dépendances (cache)
-COPY *.csproj ./
+COPY */DotNetIdentity/.csproj ./
 RUN dotnet restore
 
 # Copier le reste du code et build
@@ -24,5 +24,5 @@ COPY --from=build /app/publish .
 EXPOSE 80
 EXPOSE 443
 
-# Remplace "TonProjet.dll" par le nom de ton assembly principal
-ENTRYPOINT ["dotnet", "TonProjet.dll"]
+# Remplace "DotNetIdentity.dll" par le nom de ton assembly principal
+ENTRYPOINT ["dotnet", "DotNetIdentity.dll"]
