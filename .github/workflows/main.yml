@@ -69,5 +69,5 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             sudo docker exec dotnet-app dotnet ef database update \
-              --project /src/YourProject.csproj \
+              --project /src/DotNetIdentity.csproj \
               --connection "Server=db;Database=CesiZen;User Id=SA;Password=GAfGKe5h4TPng@K&;"
