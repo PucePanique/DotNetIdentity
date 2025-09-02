@@ -57,6 +57,17 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             sudo docker pull ${{ secrets.VPS_DOCKER_USERNAME }}/dotnet-app:latest
-            sudo docker stop dotnet-app || true
-            sudo docker rm dotnet-app || true
+            sudo docker stop pucepanique3/dotnet-app || true
+            sudo docker rm pucepanique3/dotnet-app || true
             sudo docker run -d --name dotnet-app -p 80:80 ${{ secrets.VPS_DOCKER_USERNAME }}/dotnet-app:latest
+
+      - name: Run EF migrations on VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            docker exec dotnet-app dotnet ef database update \
+              --project /src/YourProject.csproj \
+              --connection "Server=db;Database=CesiZen;User Id=SA;Password=GAfGKe5h4TPng@K&;"
