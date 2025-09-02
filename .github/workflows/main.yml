@@ -47,3 +47,17 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.VPS_DOCKER_USERNAME }}/dotnet-app:latest
+
+      # 8️⃣ Deploy via SSH sur VPS
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            docker pull ${{ secrets.VPS_DOCKER_USERNAME }}/dotnet-app:latest
+            docker stop dotnet-app || true
+            docker rm dotnet-app || true
+            docker run -d --name dotnet-app -p 80:80 ${{ secrets.VPS_DOCKER_USERNAME }}/dotnet-app:latest
