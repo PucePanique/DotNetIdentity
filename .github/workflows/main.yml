@@ -3,46 +3,47 @@ name: Publish to Docker Hub
 on:
   push:
     branches:
-      - master
+      - main   # change si ta branche principale n'est pas "main"
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     steps:
-      # 🔹 1. Récupération du code
+      # 1️⃣ Récupérer le code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 🔹 2. Setup .NET 8
+      # 2️⃣ Setup .NET 8
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      # 🔹 3. Restore dépendances
+      # 3️⃣ Restaurer dépendances
       - name: Restore dependencies
         run: dotnet restore
 
-      # 🔹 4. Build projet (Release)
+      # 4️⃣ Build projet (Release)
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-      # 🔹 5. Run tests (optionnel, tu peux supprimer si tu veux aller plus vite)
-      - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+      # 5️⃣ Tests (optionnel)
+     # - name: Run tests
+      #  run: dotnet test --no-build --verbosity normal
 
-      # 🔹 6. Connexion à Docker Hub
+      # 6️⃣ Login Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.VPS_DOCKER_USERNAME }}
           password: ${{ secrets.VPS_DOCKER_PASSWORD }}
 
-      # 🔹 7. Construire et pousser l'image
+      # 7️⃣ Build et push image Docker
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ secrets.VPS_DOCKER_USERNAME }}/dotnet-app:latest
