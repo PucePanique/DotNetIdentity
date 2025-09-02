@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
 # Copier les fichiers csproj et restaurer les dépendances (cache)
-COPY */DotNetIdentity/.csproj ./
+COPY DotNetIdentity/*.csproj ./
 RUN dotnet restore
 
 # Copier le reste du code et build
