@@ -250,36 +250,27 @@ Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] Database type i
 Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] check if initial migration is enabled....");
 Console.ForegroundColor = ConsoleColor.White;
 
-if(builder.Configuration.GetSection("AppSettings").GetSection("MigrateOnStartup").Value=="true") {
+if (builder.Configuration.GetSection("AppSettings").GetSection("MigrateOnStartup").Value == "true")
+{
     Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration is enabled! Try to apply migration for Database type: " + DbType);
+    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration is enabled! Applying migrations for Database type: " + DbType);
     Console.ForegroundColor = ConsoleColor.White;
     using (var scope = app.Services.CreateScope())
     {
-        if (DbType == "MySql")
-        {
-            var dataContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await dataContext.GetInfrastructure().GetService<IMigrator>()!.MigrateAsync("Initial_MySql");
-        }
-        else if (DbType == "SqlServer")
-        {
-            var dataContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await dataContext.GetInfrastructure().GetService<IMigrator>()!.MigrateAsync("Initial_SqlServer");
-        }
-        else if (DbType == "SqLite")
-        {
-            var dataContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await dataContext.GetInfrastructure().GetService<IMigrator>()!.MigrateAsync("Initial_SqLite");
-        }
+        var dataContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await dataContext.Database.MigrateAsync();
     }
     Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration migration successfully applied for Database type: " + DbType);
-    Console.ForegroundColor = ConsoleColor.White;
-} else {
-    Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration is disabled! Skipping intial migration.");
+    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] migrations successfully applied for Database type: " + DbType);
     Console.ForegroundColor = ConsoleColor.White;
 }
+else
+{
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration is disabled! Skipping migration.");
+    Console.ForegroundColor = ConsoleColor.White;
+}
+
 // enable localization in request parameters
 app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
 
