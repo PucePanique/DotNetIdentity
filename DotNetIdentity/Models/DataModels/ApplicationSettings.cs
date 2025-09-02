@@ -9,6 +9,7 @@ namespace DotNetIdentity.Models.DataModels {
         /// property name
         /// </summary>
         /// <value>string</value>
+        [Key]
         public string? Name {get;set;}
         /// <summary>
         /// property Type

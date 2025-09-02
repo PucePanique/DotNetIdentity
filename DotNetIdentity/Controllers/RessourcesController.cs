@@ -46,23 +46,25 @@ namespace DotNetIdentity.Controllers
         /// <returns>Vue contenant les ressources filtrées.</returns>
         public async Task<IActionResult> Index(string search = "", int take = 6)
         {
-            var ressourcesQuery = from res in _Context.Ressources
-                                  join resImg in _Context.RessourcesImages on res.Id equals resImg.RessourceId
-                                  join img in _Context.Images on resImg.ImageId equals img.Id
-                                  select new RessourcesVM
-                                  {
-                                      Id = res.Id,
-                                      Title = res.Title,
-                                      Description = res.Description,
-                                      Url = res.Url,
-                                      Category = res.Category,
-                                      CreatedBy = res.CreatedBy,
-                                      CreatedAt = res.CreatedAt,
-                                      UpdatedBy = res.UpdatedBy,
-                                      UpdatedAt = res.UpdatedAt,
-                                      Status = res.Status,
-                                      ImagePath = img.Image
-                                  };
+            var ressourcesQuery = _Context.Ressources
+                .Where(r => r.Status)
+                .Select(r => new RessourcesVM
+                {
+                    Id = r.Id,
+                    Title = r.Title,
+                    Description = r.Description,
+                    Url = r.Url,
+                    Category = r.Category,
+                    CreatedBy = r.CreatedBy,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedBy = r.UpdatedBy,
+                    UpdatedAt = r.UpdatedAt,
+                    Status = r.Status,
+                    ImagePath = r.RessourcesImages
+                                   .Select(ri => ri.Images.Image)
+                                   .FirstOrDefault()
+                });
+
             ressourcesQuery = ressourcesQuery.Where(r => r.Status);
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -127,24 +129,28 @@ namespace DotNetIdentity.Controllers
 
             if (pic is not null)
             {
-                string NomImg = Path.GetFileName(pic.FileName);
-                string ext = Path.GetExtension(pic.FileName).ToLowerInvariant();
-
-                if (!allowedExtensions.Contains(ext) || !allowedContentTypes.Contains(pic.ContentType))
+                try
                 {
-                    ModelState.AddModelError("Image", "Format d'image non supporté. Formats autorisés : jpg, jpeg, png, webp, gif, bmp.");
-                    return View("Creer", ressourceVm);
+                    string NomImg = Path.GetFileName(pic.FileName);
+                    string ext = Path.GetExtension(pic.FileName).ToLowerInvariant();
+
+                    if (!allowedExtensions.Contains(ext) || !allowedContentTypes.Contains(pic.ContentType))
+                    {
+                        ModelState.AddModelError("Image", "Format d'image non supporté. Formats autorisés : jpg, jpeg, png, webp, gif, bmp.");
+                        return View("Creer", ressourceVm);
+                    }
+
+                    string relativePath = Path.Combine("/assets/RessourcesImages", NomImg);
+                    string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/RessourcesImages", NomImg);
+
+                    using (var stream = new FileStream(absolutePath, FileMode.Create))
+                    {
+                        await pic.CopyToAsync(stream);
+                    }
+
+                    FilePath = relativePath;
                 }
-
-                string relativePath = Path.Combine("/assets/RessourcesImages", NomImg);
-                string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/assets/RessourcesImages", NomImg);
-
-                using (var stream = new FileStream(absolutePath, FileMode.Create))
-                {
-                    await pic.CopyToAsync(stream);
-                }
-
-                FilePath = relativePath;
+                catch (Exception ex) { }
             }
 
             if (ModelState.IsValid)
@@ -321,7 +327,7 @@ namespace DotNetIdentity.Controllers
             Image.Image = ressourcesVM.ImagePath;
             _Context.Images.Update(Image);
 
-            return View(nameof(Modifiaction),ressourcesVM);
+            return View(nameof(Modifiaction), ressourcesVM);
         }
     }
 }
