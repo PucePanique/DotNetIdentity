@@ -11,8 +11,6 @@ namespace DotNetIdentity.Data
     {
         public AppDbContextSqlServer(DbContextOptions<AppDbContextSqlServer> options) : base(options) { }
 
-        public DbSet<AppSettingsBase> AppSettings { get; set; }
-        public DbSet<AppLogs> AppLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

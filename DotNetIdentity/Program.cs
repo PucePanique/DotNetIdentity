@@ -25,7 +25,6 @@ using Serilog.Sinks.SystemConsole.Themes;
 
 var builder = WebApplication.CreateBuilder(args);
 var dbType = builder.Configuration["AppSettings:DataBaseType"] ?? "SqlServer";
-var migrateOnStartup = string.Equals(builder.Configuration["AppSettings:MigrateOnStartup"], "true", StringComparison.OrdinalIgnoreCase);
 
 string? conn;
 switch (dbType)
@@ -266,6 +265,8 @@ Console.ForegroundColor = ConsoleColor.Cyan;
 Console.WriteLine($"[{DateTime.Now:T} INF] Database type is: {dbType}");
 Console.ResetColor();
 
+var migrateOnStartup = app.Configuration.GetValue("AppSettings:MigrateOnStartup", true);
+
 if (migrateOnStartup)
 {
     const int maxAttempts = 6;
@@ -273,7 +274,7 @@ if (migrateOnStartup)
 
     using var scope = app.Services.CreateScope();
     var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("StartupMigration");
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContextSqlServer>();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); // <-- abstrait, DI fournit la bonne implémentation
 
     for (int attempt = 1; attempt <= maxAttempts; attempt++)
     {
@@ -295,6 +296,7 @@ else
 {
     Console.WriteLine("[INF] MigrateOnStartup=false, skipping migrations.");
 }
+
 // enable localization in request parameters
 app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
 
