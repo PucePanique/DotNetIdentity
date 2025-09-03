@@ -57,14 +57,24 @@ jobs:
             set -euo pipefail
             cd ${{ secrets.VPS_APP_DIR }}
 
-            # Crée/ met à jour un .env sécurisé
+            # .env minimal pour l'app
             install -m 600 /dev/null .env
             cat > .env << 'EOF'
             DOCKERHUB_USER=${{ secrets.VPS_DOCKER_USERNAME }}
             SA_PASSWORD=${{ secrets.SA_PASSWORD }}
             EOF
 
-            # Pull & up
+            # Réseau partagé entre app et SQL Server existant
+            sudo docker network inspect cesi >/dev/null 2>&1 || sudo docker network create cesi
+
+            # Raccorder le conteneur SQL Server existant au réseau "cesi" (ignore si déjà connecté)
+            if sudo docker ps -a --format '{{.Names}}' | grep -qx 'sqlserver'; then
+              sudo docker network connect cesi sqlserver 2>/dev/null || true
+            else
+              echo "Attention: aucun conteneur nommé 'sqlserver' trouvé. Vérifie le nom du conteneur DB."
+            fi
+
+            # Mettre à jour uniquement l'image/app
             sudo docker compose pull app
-            sudo docker compose up -d
+            sudo docker compose up -d app
             sudo docker image prune -f
