@@ -34,9 +34,8 @@ jobs:
 
       # 6️⃣ Lancer les migrations EF Core
       - name: Run EF migrations
-        run: dotnet ef database update \
-              --project DotNetIdentity.csproj \
-              --connection "${{ secrets.DB_CONNECTION }}"
+        run: dotnet ef database update --connection "${{ secrets.DB_CONNECTION }}"
+        working-directory: DotNetIdentity
         env:
           PATH: $PATH:/home/runner/.dotnet/tools
 
