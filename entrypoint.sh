@@ -1,24 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== SQL Server Migration & Startup ==="
+# Debug : afficher les variables d'environnement (sans mot de passe)
+echo "=== DEBUG ENV ==="
+CONN_STR_VALUE="${ConnectionStrings__Default:-}"
+echo "ConnectionStrings__Default length: ${#CONN_STR_VALUE}"
+if [[ -n "$CONN_STR_VALUE" ]]; then
+  echo "First 30 chars: ${CONN_STR_VALUE:0:30}..."
+else
+  echo "ConnectionStrings__Default is EMPTY or UNSET"
+fi
+echo "=================="
 
-# La connexion
+# La connexion arrive de l'env "ConnectionStrings__Default" (style ASP.NET Core)
 CONN_STR="${ConnectionStrings__Default:-}"
 if [[ -z "$CONN_STR" ]]; then
-  echo " ERREUR: ConnectionStrings__Default manquante"
+  echo "ERREUR: variable d'environnement ConnectionStrings__Default absente."
+  echo "Définis-la dans docker-compose (.env) avant de démarrer."
   exit 1
 fi
 
-# Vérifier que c'est bien SQL Server
-echo "Database Type: ${AppSettings__DataBaseType:-UNDEFINED}"
+# Vérifier si la chaîne contient des variables non résolues
+if [[ "$CONN_STR" == *'${'* ]]; then
+  echo "ERREUR: La chaîne de connexion contient des variables non résolues:"
+  echo "$CONN_STR"
+  exit 1
+fi
 
-# Appliquer les migrations avec retry
-echo "Applying SQL Server migrations..."
+echo "Applying EF migrations..."
 attempts=30
 for i in $(seq 1 $attempts); do
   if /app/migrator --connection "$CONN_STR"; then
-    echo "Migrations SQL Server appliquées."
+    echo "Migrations appliquées."
     break
   fi
   if [[ "$i" -eq "$attempts" ]]; then
@@ -29,5 +42,5 @@ for i in $(seq 1 $attempts); do
   sleep 2
 done
 
-echo "Starting .NET application..."
+# Démarrer l'application
 exec dotnet DotNetIdentity.dll

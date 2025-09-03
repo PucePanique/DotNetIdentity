@@ -13,7 +13,7 @@ RUN dotnet restore ./DotNetIdentity/DotNetIdentity.csproj
 # Code
 COPY . .
 
-# Build/publish de l'app
+# Build/publish de l’app
 RUN dotnet publish ./DotNetIdentity/DotNetIdentity.csproj -c Release -o /app/publish
 
 # Outil EF
@@ -26,7 +26,7 @@ ENV EF_DESIGNTIME_CONN="Server=localhost,1433;Database=DesignTime;User Id=sa;Pas
 # Forcer SQL Server pour les migrations
 ENV AppSettings__DataBaseType=SqlServer
 
-# Bundle pour SQL Server uniquement
+# Bundle des migrations sans tenter de booter ton host applicatif
 RUN dotnet ef migrations bundle \
     --project ./DotNetIdentity/DotNetIdentity.csproj \
     --startup-project ./DotNetIdentity/DotNetIdentity.csproj \
@@ -44,7 +44,7 @@ WORKDIR /app
 COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
 
-# Entrypoint
+# Entrypoint: applique migrations puis démarre l’appli
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
