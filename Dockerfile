@@ -31,8 +31,6 @@ RUN dotnet ef migrations bundle \
 # ----------------------
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
-COPY entrypoint.sh /app/entrypoint.sh
-
 WORKDIR /app
 
 # Copier l'appli et le binaire de migration
@@ -40,7 +38,7 @@ COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
 
 # Script d'entrypoint
-COPY docker/entrypoint.sh /app/entrypoint.sh
+COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Ports exposés (HTTP/HTTPS)
