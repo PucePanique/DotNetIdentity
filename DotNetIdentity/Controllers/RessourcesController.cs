@@ -65,42 +65,55 @@ namespace DotNetIdentity.Controllers
                                    .FirstOrDefault()
                 });
 
-            ressourcesQuery = ressourcesQuery.Where(r => r.Status);
-
             if (!string.IsNullOrWhiteSpace(search))
             {
                 ressourcesQuery = ressourcesQuery.Where(r =>
                     r.Title.Contains(search) || r.Description.Contains(search));
             }
 
+            // Récupérer le total AVANT d'appliquer Take()
+            var totalCount = await ressourcesQuery.CountAsync();
+
             var ressources = await ressourcesQuery
                 .OrderByDescending(r => r.CreatedAt)
                 .Take(take)
                 .ToListAsync();
 
-            ViewBag.Search = search;
+            // Garantir que ressources n'est jamais null
+            ressources ??= new List<RessourcesVM>();
+
+            ViewBag.Search = search ?? "";
             ViewBag.Take = take;
-            ViewBag.Total = await ressourcesQuery.CountAsync();
+            ViewBag.Total = totalCount;
 
-            var modelTypes = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => t.Namespace != null
-                            && (t.Namespace == "DotNetIdentity.Models.CesiZenModels"
-                                || t.Namespace.StartsWith("DotNetIdentity.Models.CesiZenModels.")))
-                .ToList();
+            // Génération du diagramme (optionnel, à déplacer ailleurs si possible)
+            try
+            {
+                var modelTypes = Assembly.GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(t => t.Namespace != null
+                                && (t.Namespace == "DotNetIdentity.Models.CesiZenModels"
+                                    || t.Namespace.StartsWith("DotNetIdentity.Models.CesiZenModels.")))
+                    .ToList();
 
-            var generator = new DiagramGenerator(
-                outputFilePath: "diagram.mmd",
-                assembliesToScan: new List<Assembly> { Assembly.GetExecutingAssembly() },
-                domainTypes: modelTypes,
-                generateWithoutProperties: false
-            );
+                var generator = new DiagramGenerator(
+                    outputFilePath: "diagram.mmd",
+                    assembliesToScan: new List<Assembly> { Assembly.GetExecutingAssembly() },
+                    domainTypes: modelTypes,
+                    generateWithoutProperties: false
+                );
 
-            generator.Generate();
-            if (ressources is null)
-                ressources = new();
+                generator.Generate();
+            }
+            catch (Exception ex)
+            {
+                // Log l'erreur si nécessaire, mais ne pas faire planter l'application
+                // _logger.LogError(ex, "Erreur lors de la génération du diagramme");
+            }
+
             return View(ressources);
         }
+
 
 
         /// <summary>

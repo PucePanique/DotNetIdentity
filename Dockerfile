@@ -36,6 +36,16 @@ RUN dotnet ef migrations bundle \
     --target-runtime linux-x64 \
     --output /app/migrator
 
+# Bundle des migrations sans tenter de booter ton host applicatif
+RUN dotnet ef migrations bundle \
+    --project ./DotNetIdentity/DotNetIdentity.csproj \
+    --startup-project ./DotNetIdentity/DotNetIdentity.csproj \
+    --configuration Release \
+    --context DotNetIdentity.Data.AppDbContext \
+    --target-runtime linux-x64 \
+    --output /app/migrator
+
+
 # ----------------------
 # Étape 2 : Runtime
 # ----------------------
