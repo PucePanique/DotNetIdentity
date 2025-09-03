@@ -23,26 +23,17 @@ ENV PATH="/root/.dotnet/tools:${PATH}"
 # Variable de connexion utilisée par le factory design-time
 ENV EF_DESIGNTIME_CONN="Server=localhost,1433;Database=DesignTime;User Id=sa;Password=Pass@word1;Encrypt=True;TrustServerCertificate=True"
 
-# Debug EF
-RUN dotnet ef --version
+# Forcer SQL Server pour les migrations
+ENV AppSettings__DataBaseType=SqlServer
 
-# Bundle pour le contexte Identity (SqlServer)
+# Bundle pour SQL Server uniquement
 RUN dotnet ef migrations bundle \
     --project ./DotNetIdentity/DotNetIdentity.csproj \
     --startup-project ./DotNetIdentity/DotNetIdentity.csproj \
     --configuration Release \
     --context DotNetIdentity.Data.AppDbContextSqlServer \
     --target-runtime linux-x64 \
-    --output /app/migrator-identity
-
-# Bundle pour le contexte Application (autre contexte)
-RUN dotnet ef migrations bundle \
-    --project ./DotNetIdentity/DotNetIdentity.csproj \
-    --startup-project ./DotNetIdentity/DotNetIdentity.csproj \
-    --configuration Release \
-    --context DotNetIdentity.Data.AppDbContext \
-    --target-runtime linux-x64 \
-    --output /app/migrator-app
+    --output /app/migrator
 
 # ----------------------
 # Étape 2 : Runtime
@@ -51,12 +42,14 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
 COPY --from=build /app/publish ./
-COPY --from=build /app/migrator-identity /app/migrator-identity
-COPY --from=build /app/migrator-app /app/migrator-app
+COPY --from=build /app/migrator /app/migrator
 
 # Entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
+
+# Forcer SQL Server au runtime aussi
+ENV AppSettings__DataBaseType=SqlServer
 
 EXPOSE 80
 ENV ASPNETCORE_URLS=http://+:80

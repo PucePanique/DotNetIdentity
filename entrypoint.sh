@@ -1,59 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Debug : afficher les variables d'environnement (sans mot de passe)
-echo "=== DEBUG ENV ==="
-CONN_STR_VALUE="${ConnectionStrings__Default:-}"
-echo "ConnectionStrings__Default length: ${#CONN_STR_VALUE}"
-if [[ -n "$CONN_STR_VALUE" ]]; then
-  echo "First 30 chars: ${CONN_STR_VALUE:0:30}..."
-else
-  echo "ConnectionStrings__Default is EMPTY or UNSET"
-fi
-echo "=================="
+echo "=== SQL Server Migration & Startup ==="
 
-# La connexion arrive de l'env "ConnectionStrings__Default" (style ASP.NET Core)
+# La connexion
 CONN_STR="${ConnectionStrings__Default:-}"
 if [[ -z "$CONN_STR" ]]; then
-  echo "ERREUR: variable d'environnement ConnectionStrings__Default absente."
-  echo "Définis-la dans docker-compose (.env) avant de démarrer."
+  echo " ERREUR: ConnectionStrings__Default manquante"
   exit 1
 fi
 
-# Vérifier si la chaîne contient des variables non résolues
-if [[ "$CONN_STR" == *'${'* ]]; then
-  echo "ERREUR: La chaîne de connexion contient des variables non résolues:"
-  echo "$CONN_STR"
-  exit 1
-fi
+# Vérifier que c'est bien SQL Server
+echo "Database Type: ${AppSettings__DataBaseType:-UNDEFINED}"
 
-# Fonction pour appliquer les migrations avec retry
-apply_migrations() {
-  local migrator_path=$1
-  local context_name=$2
-  
-  echo " Applying $context_name migrations..."
-  attempts=30
-  for i in $(seq 1 $attempts); do
-    if "$migrator_path" --connection "$CONN_STR"; then
-      echo " $context_name migrations appliquées."
-      return 0
-    fi
-    if [[ "$i" -eq "$attempts" ]]; then
-      echo " Echec $context_name migrations après ${attempts} tentatives."
-      exit 1
-    fi
-    echo "Try ${i}/${attempts} for $context_name - retry in 2s..."
-    sleep 2
-  done
-}
+# Appliquer les migrations avec retry
+echo "Applying SQL Server migrations..."
+attempts=30
+for i in $(seq 1 $attempts); do
+  if /app/migrator --connection "$CONN_STR"; then
+    echo "Migrations SQL Server appliquées."
+    break
+  fi
+  if [[ "$i" -eq "$attempts" ]]; then
+    echo "Echec migrations après ${attempts} tentatives."
+    exit 1
+  fi
+  echo "Try ${i}/${attempts} - retry in 2s..."
+  sleep 2
+done
 
-# Appliquer les migrations des 2 contextes
-apply_migrations "/app/migrator-identity" "Identity"
-apply_migrations "/app/migrator-app" "Application"
-
-echo "Toutes les migrations sont appliquées avec succès!"
-
-# Démarrer l'application
-echo " Starting application..."
+echo "Starting .NET application..."
 exec dotnet DotNetIdentity.dll
