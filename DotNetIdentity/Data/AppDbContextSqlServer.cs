@@ -1,15 +1,36 @@
 // AppDbContextSqlServer.cs
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using DotNetIdentity.Models;
+using DotNetIdentity.Models.CesiZenModels.DiagnosticModels;
+using DotNetIdentity.Models.CesiZenModels.Respiration;
+using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
 using DotNetIdentity.Models.DataModels;
 using DotNetIdentity.Models.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace DotNetIdentity.Data
 {
     public class AppDbContextSqlServer : AppDbContext
     {
         public AppDbContextSqlServer(DbContextOptions<AppDbContextSqlServer> options) : base(options) { }
+
+        public new DbSet<AppLogsSqLite>? AppLogsSqLite { get; set; }
+        public new DbSet<AppLogs>? AppLogs { get; set; }
+        public new DbSet<ApplicationSettings>? AppSettings { get; set; }
+
+        public new DbSet<Ressources> Ressources { get; set; } = default!;
+        public new DbSet<Images> Images { get; set; } = default!;
+        public new DbSet<RessourcesImages> RessourcesImages { get; set; } = default!;
+        public new DbSet<Tags> Tags { get; set; } = default!;
+        public new DbSet<RessourcesTags> RessourcesTags { get; set; } = default!;
+
+        public new DbSet<Sessions> Sessions { get; set; } = default!;
+        public new DbSet<ExerciceConfigurations> ExerciceConfigurations { get; set; } = default!;
+        public new DbSet<Exercices> Exercices { get; set; } = default!;
+
+        public new DbSet<DiagnosticSessions> DiagnosticSessions { get; set; } = default!;
+        public new DbSet<DiagnosticReponses> DiagnosticReponses { get; set; } = default!;
+        public new DbSet<DiagnosticEvenements> DiagnosticEvenements { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
