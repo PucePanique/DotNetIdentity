@@ -97,54 +97,48 @@ jobs:
           cache-to: type=registry,ref=${{ steps.tags.outputs.image_ref }}:buildcache,mode=max
 
   deploy-vps:
-    name: Deploy on VPS
-    runs-on: ubuntu-latest
-    needs: docker-publish   # garde cette dépendance si tu as séparé les jobs
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script_stop: true
-          script: |
-            set -euo pipefail
-            cd ${{ secrets.VPS_APP_DIR }}
+      name: Deploy on VPS
+      runs-on: ubuntu-latest
+      needs: docker-publish
+      steps:
+        - name: Deploy via SSH
+          uses: appleboy/ssh-action@v0.1.7
+          with:
+            host: ${{ secrets.VPS_HOST }}
+            username: ${{ secrets.VPS_USER }}
+            key: ${{ secrets.VPS_SSH_KEY }}
+            script_stop: true
+            script: |
+              set -euo pipefail
+              cd ${{ secrets.VPS_APP_DIR }}
 
-            # .env minimal (si tu le gères depuis le pipeline)
-            install -m 600 /dev/null .env
-            cat > .env << 'EOF'
-            DOCKERHUB_USER=${{ secrets.VPS_DOCKER_USERNAME }}
-            APP_IMAGE=${{ secrets.VPS_DOCKER_USERNAME }}/dotnet-app:latest
-            DB_HOST=sqlserver
-            DB_PORT=1433
-            DB_NAME=CesiZEN
-            DB_USER=sa
-            SQL_SA_PASSWORD=${{ secrets.SQL_SA_PASSWORD }}
-            CONNECTION_STRING=Server=${DB_HOST},${DB_PORT};Database=${DB_NAME};User Id=${DB_USER};Password=${SA_PASSWORD};Encrypt=True;TrustServerCertificate=True
-            DRONE_SSH_PREV_COMMAND_EXIT_CODE=
-            EOF
+              # Échapper proprement le mot de passe
+              SA_PASSWORD='${{ secrets.SQL_SA_PASSWORD }}'
+              
+              # Créer le .env avec des guillemets appropriés
+              cat > .env << EOF
+              DOCKERHUB_USER=${{ secrets.VPS_DOCKER_USERNAME }}
+              APP_IMAGE=${{ secrets.VPS_DOCKER_USERNAME }}/dotnet-app:latest
+              DB_HOST=sqlserver
+              DB_PORT=1433
+              DB_NAME=CesiZEN
+              DB_USER=sa
+              SQL_SA_PASSWORD='${SA_PASSWORD}'
+              CONNECTION_STRING="Server=\${DB_HOST},\${DB_PORT};Database=\${DB_NAME};User Id=\${DB_USER};Password=\${SQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
+              EOF
 
-            # Réseau externe partagé
-            sudo docker network inspect cesi >/dev/null 2>&1 || sudo docker network create cesi
+              # Le reste du script...
+              sudo docker network inspect cesi >/dev/null 2>&1 || sudo docker network create cesi
 
-            # Raccorder le conteneur SQL existant au réseau (si présent)
-            if sudo docker ps -a --format '{{.Names}}' | grep -qx 'sqlserver'; then
-              sudo docker network connect cesi sqlserver 2>/dev/null || true
-            else
-              echo "Attention: aucun conteneur nommé 'sqlserver' trouvé."
-            fi
+              if sudo docker ps -a --format '{{.Names}}' | grep -qx 'sqlserver'; then
+                sudo docker network connect cesi sqlserver 2>/dev/null || true
+              fi
 
-            # Supprimer l'ancien conteneur au nom fixe s'il existe (évite la collision)
-            if sudo docker ps -a --format '{{.Names}}' | grep -qx 'dotnet-app'; then
-              sudo docker rm -f dotnet-app
-            fi
+              if sudo docker ps -a --format '{{.Names}}' | grep -qx 'dotnet-app'; then
+                sudo docker rm -f dotnet-app
+              fi
 
-            # Mettre à jour et relancer le service app
-            sudo docker compose pull app
-            sudo docker compose up -d app
-
-            # Nettoyage d'images inutilisées
-            sudo docker image prune -f
+              sudo docker compose pull app
+              sudo docker compose up -d app
+              sudo docker image prune -f
 
