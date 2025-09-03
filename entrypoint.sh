@@ -3,8 +3,13 @@ set -euo pipefail
 
 # Debug : afficher les variables d'environnement (sans mot de passe)
 echo "=== DEBUG ENV ==="
-echo "ConnectionStrings__Default length: ${#ConnectionStrings__Default:-0}"
-echo "First 20 chars: ${ConnectionStrings__Default:0:20}..."
+CONN_STR_VALUE="${ConnectionStrings__Default:-}"
+echo "ConnectionStrings__Default length: ${#CONN_STR_VALUE}"
+if [[ -n "$CONN_STR_VALUE" ]]; then
+  echo "First 30 chars: ${CONN_STR_VALUE:0:30}..."
+else
+  echo "ConnectionStrings__Default is EMPTY or UNSET"
+fi
 echo "=================="
 
 # La connexion arrive de l'env "ConnectionStrings__Default" (style ASP.NET Core)
