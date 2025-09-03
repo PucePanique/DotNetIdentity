@@ -1,14 +1,12 @@
 global using System.Globalization;
-global using Microsoft.AspNetCore.Localization;
 global using DotNetIdentity.Services.SettingsService;
-using System.Net;
+global using Microsoft.AspNetCore.Localization;
 using DotNetIdentity.Data;
 using DotNetIdentity.Helpers;
 using DotNetIdentity.IdentitySettings;
 using DotNetIdentity.IdentitySettings.Requirements;
 using DotNetIdentity.IdentitySettings.Validators;
 using DotNetIdentity.Models;
-using DotNetIdentity.Models.BusinessModels;
 using DotNetIdentity.Models.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -16,15 +14,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
-using Serilog.Sinks.MSSqlServer;
+using Serilog.Events;
 using Serilog.Sinks.MariaDB;
 using Serilog.Sinks.MariaDB.Extensions;
-using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
 using Serilog.Sinks.SystemConsole.Themes;
-using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.DataProtection;
+
 
 [assembly: System.Reflection.AssemblyVersion("1.1.*")]
 
@@ -148,7 +143,7 @@ else if (dbType == "SqLite")
         .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
         .Enrich.FromLogContext()
         .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-        .WriteTo.SQLite(sqliteDbPath: Environment.CurrentDirectory + "/" + builder.Configuration.GetConnectionString("SqLite")!.Replace("Data Source=",""), tableName: "AppLogsSqLite", batchSize: 1)
+        .WriteTo.SQLite(sqliteDbPath: Environment.CurrentDirectory + "/" + builder.Configuration.GetConnectionString("SqLite")!.Replace("Data Source=", ""), tableName: "AppLogsSqLite", batchSize: 1)
         .CreateLogger();
 }
 builder.Host.UseSerilog();
@@ -241,7 +236,7 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("UserType", Enum.GetName(UserType.User)!);
     });
 
-   
+
     options.AddPolicy("FreeTrialPolicy", policy =>
     {
         policy.Requirements.Add(new FreeTrialExpireRequirement());
@@ -273,48 +268,33 @@ Console.ResetColor();
 
 if (migrateOnStartup)
 {
-    Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine($"[{DateTime.Now:T} INF] Applying EF Core migrations…");
-    Console.ResetColor();
+    const int maxAttempts = 6;
+    var delay = TimeSpan.FromSeconds(5);
 
     using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("StartupMigration");
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContextSqlServer>();
 
-    const int maxAttempts = 6;
     for (int attempt = 1; attempt <= maxAttempts; attempt++)
     {
         try
         {
+            logger.LogInformation("Applying EF Core migrations (attempt {Attempt}/{Max})…", attempt, maxAttempts);
             await db.Database.MigrateAsync();
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"[{DateTime.Now:T} INF] Migrations EF Core OK.");
-            Console.ResetColor();
+            logger.LogInformation("EF Core migrations applied.");
             break;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (attempt < maxAttempts)
         {
-            if (attempt == maxAttempts)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"[{DateTime.Now:T} ERR] Migrations failed after {maxAttempts} attempts: {ex.Message}");
-                Console.ResetColor();
-                throw;
-            }
-            var delay = TimeSpan.FromSeconds(5);
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"[{DateTime.Now:T} WRN] Migration attempt {attempt} failed: {ex.Message}. Retry in {delay.TotalSeconds}s…");
-            Console.ResetColor();
+            logger.LogWarning(ex, "Migration attempt {Attempt} failed. Retrying in {Delay}s…", attempt, delay.TotalSeconds);
             await Task.Delay(delay);
         }
     }
 }
 else
 {
-    Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine($"[{DateTime.Now:T} INF] MigrateOnStartup=false, skipping migrations.");
-    Console.ResetColor();
+    Console.WriteLine("[INF] MigrateOnStartup=false, skipping migrations.");
 }
-
 // enable localization in request parameters
 app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
 
