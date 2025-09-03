@@ -122,7 +122,7 @@ jobs:
             DB_NAME=CesiZEN
             DB_USER=sa
             SQL_SA_PASSWORD=${{ secrets.SQL_SA_PASSWORD }}
-            CONNECTION_STRING=Server=${DB_HOST},${DB_PORT};Database=${DB_NAME};User Id=${DB_USER};Password=${SQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True
+            CONNECTION_STRING=Server=${DB_HOST},${DB_PORT};Database=${DB_NAME};User Id=${DB_USER};Password=${SA_PASSWORD};Encrypt=True;TrustServerCertificate=True
             DRONE_SSH_PREV_COMMAND_EXIT_CODE=
             EOF
 
