@@ -27,20 +27,33 @@ if [[ "$CONN_STR" == *'${'* ]]; then
   exit 1
 fi
 
-echo "Applying EF migrations..."
-attempts=30
-for i in $(seq 1 $attempts); do
-  if /app/migrator --connection "$CONN_STR"; then
-    echo "Migrations appliquées."
-    break
-  fi
-  if [[ "$i" -eq "$attempts" ]]; then
-    echo "Echec migrations après ${attempts} tentatives."
-    exit 1
-  fi
-  echo "Try ${i}/${attempts} - retry in 2s..."
-  sleep 2
-done
+# Fonction pour appliquer les migrations avec retry
+apply_migrations() {
+  local migrator_path=$1
+  local context_name=$2
+  
+  echo " Applying $context_name migrations..."
+  attempts=30
+  for i in $(seq 1 $attempts); do
+    if "$migrator_path" --connection "$CONN_STR"; then
+      echo " $context_name migrations appliquées."
+      return 0
+    fi
+    if [[ "$i" -eq "$attempts" ]]; then
+      echo " Echec $context_name migrations après ${attempts} tentatives."
+      exit 1
+    fi
+    echo "Try ${i}/${attempts} for $context_name - retry in 2s..."
+    sleep 2
+  done
+}
+
+# Appliquer les migrations des 2 contextes
+apply_migrations "/app/migrator-identity" "Identity"
+apply_migrations "/app/migrator-app" "Application"
+
+echo "Toutes les migrations sont appliquées avec succès!"
 
 # Démarrer l'application
+echo " Starting application..."
 exec dotnet DotNetIdentity.dll
