@@ -20,21 +20,20 @@ COPY . .
 # Publier l'app
 RUN dotnet publish ./DotNetIdentity/*.csproj -c Release -o /app/publish
 
-# Installer l’outil EF (AVANT le bundle) et exposer le PATH
+# Installer l’outil EF et exposer le PATH
 RUN dotnet tool install --global dotnet-ef --version 8.*
 ENV PATH="/root/.dotnet/tools:${PATH}"
 
-# (Optionnel) Valider que le projet voit bien le DbContext
-# RUN dotnet ef dbcontext list --project ./DotNetIdentity/*.csproj --startup-project ./DotNetIdentity/*.csproj
+# (optionnel) vérifier la version
+RUN dotnet ef --version
 
-# Générer le bundle EF
-RUN dotnet ef migrations bundle \
-    --project ./DotNetIdentity/*.csproj \
-    --startup-project ./DotNetIdentity/*.csproj \
+# Générer le bundle EF (avec logs détaillés)
+RUN dotnet ef --verbose migrations bundle \
+    --project ./DotNetIdentity/DotNetIdentity.csproj \
+    --startup-project ./DotNetIdentity/DotNetIdentity.csproj \
     --configuration Release \
     --context DotNetIdentity.Data.AppDbContextSqlServer \
     --target-runtime linux-x64 \
-    --verbosity detailed \
     --output /app/migrator
 
 # ----------------------
