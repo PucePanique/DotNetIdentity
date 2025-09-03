@@ -32,11 +32,10 @@ RUN dotnet ef migrations bundle \
     --project ./DotNetIdentity/*.csproj \
     --startup-project ./DotNetIdentity/*.csproj \
     --configuration Release \
-    
+    --context DotNetIdentity.Data.AppDbContextSqlServer \
     --target-runtime linux-x64 \
+    --verbosity detailed \
     --output /app/migrator
-
-# --context DotNetIdentity.Data.AppDbContextSqlServer \
 
 # ----------------------
 # Étape 2 : Runtime
