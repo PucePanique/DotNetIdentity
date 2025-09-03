@@ -29,24 +29,38 @@ using Microsoft.AspNetCore.DataProtection;
 [assembly: System.Reflection.AssemblyVersion("1.1.*")]
 
 var builder = WebApplication.CreateBuilder(args);
-var DbType = builder.Configuration.GetSection("AppSettings").GetSection("DataBaseType").Value;
-var connectionString = string.Empty;
+var dbType = builder.Configuration["AppSettings:DataBaseType"] ?? "SqlServer";
+var migrateOnStartup = string.Equals(builder.Configuration["AppSettings:MigrateOnStartup"], "true", StringComparison.OrdinalIgnoreCase);
 
-// database context
-if (DbType == "MySql")
+string? conn;
+switch (dbType)
 {
-    connectionString = builder.Configuration.GetConnectionString("MySql");
-    builder.Services.AddDbContext<AppDbContext, AppDbContextMySql>();    
-}
-else if (DbType == "SqlServer")
-{
-    connectionString = builder.Configuration.GetConnectionString("SqlServer");
-    builder.Services.AddDbContext<AppDbContext, AppDbContextSqlServer>();
-}
-else if (DbType == "SqLite")
-{
-    connectionString = builder.Configuration.GetConnectionString("SqLite");
-    builder.Services.AddDbContext<AppDbContext, AppDbContextSqLite>();
+    case "MySql":
+        conn = builder.Configuration.GetConnectionString("MySql");
+        if (string.IsNullOrWhiteSpace(conn))
+            throw new InvalidOperationException("ConnectionStrings:MySql manquante.");
+        builder.Services.AddDbContext<AppDbContext, AppDbContextMySql>(opt =>
+            opt.UseMySql(conn, ServerVersion.AutoDetect(conn)));
+        break;
+
+    case "SqlServer":
+        conn = builder.Configuration.GetConnectionString("SqlServer");
+        if (string.IsNullOrWhiteSpace(conn))
+            throw new InvalidOperationException("ConnectionStrings:SqlServer manquante.");
+        builder.Services.AddDbContext<AppDbContext, AppDbContextSqlServer>(opt =>
+            opt.UseSqlServer(conn));
+        break;
+
+    case "SqLite":
+        conn = builder.Configuration.GetConnectionString("SqLite");
+        if (string.IsNullOrWhiteSpace(conn))
+            throw new InvalidOperationException("ConnectionStrings:SqLite manquante.");
+        builder.Services.AddDbContext<AppDbContext, AppDbContextSqLite>(opt =>
+            opt.UseSqlite(conn));
+        break;
+
+    default:
+        throw new InvalidOperationException($"Unsupported AppSettings:DataBaseType '{dbType}'.");
 }
 
 // add session
@@ -63,7 +77,7 @@ builder.Services.AddSession(options =>
 
 // add serilog
 var SeriLogConnStr = string.Empty;
-if (DbType == "MySql")
+if (dbType == "MySql")
 {
     var MpropertiesToColumns = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
     {
@@ -91,7 +105,7 @@ if (DbType == "MySql")
         .Enrich.FromLogContext()
         //.ReadFrom.Configuration(builder.Configuration)    
         .WriteTo.MariaDB(
-            connectionString: connectionString,
+            connectionString: conn,
             tableName: "AppLogs",
             autoCreateTable: true,
             useBulkInsert: false,
@@ -100,7 +114,7 @@ if (DbType == "MySql")
         .WriteTo.Console(theme: AnsiConsoleTheme.Code)
         .CreateLogger();
 }
-else if (DbType == "SqlServer")
+else if (dbType == "SqlServer")
 {
     var sinkOpts = new MSSqlServerSinkOptions
     {
@@ -117,13 +131,13 @@ else if (DbType == "SqlServer")
         .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
         .Enrich.FromLogContext()
         .WriteTo.MSSqlServer(
-            connectionString: connectionString,
+            connectionString: conn,
             sinkOptions: sinkOpts
         )
         .WriteTo.Console(theme: AnsiConsoleTheme.Code)
         .CreateLogger();
 }
-else if (DbType == "SqLite")
+else if (dbType == "SqLite")
 {
     Log.Logger = new LoggerConfiguration()
         .MinimumLevel.Debug()
@@ -236,39 +250,69 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-if (DbType != "SqlServer" && DbType != "MySql" && DbType != "SqLite")
+if (dbType != "SqlServer" && dbType != "MySql" && dbType != "SqLite")
 {
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] " + DbType + " is an invalid Database type. Please take a look into your appsettings.json!");
+    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] " + dbType + " is an invalid Database type. Please take a look into your appsettings.json!");
     Console.ForegroundColor = ConsoleColor.White;
     await app.StopAsync();
 }
 
 // migrate initial
 Console.ForegroundColor = ConsoleColor.Cyan;
-Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] Database type is: " + DbType);
+Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] Database type is: " + dbType);
 Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] check if initial migration is enabled....");
 Console.ForegroundColor = ConsoleColor.White;
 
-if (builder.Configuration.GetSection("AppSettings").GetSection("MigrateOnStartup").Value == "true")
+// ----------------------
+// Migrations au démarrage (avec retry)
+// ----------------------
+Console.ForegroundColor = ConsoleColor.Cyan;
+Console.WriteLine($"[{DateTime.Now:T} INF] Database type is: {dbType}");
+Console.ResetColor();
+
+if (migrateOnStartup)
 {
     Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration is enabled! Applying migrations for Database type: " + DbType);
-    Console.ForegroundColor = ConsoleColor.White;
-    using (var scope = app.Services.CreateScope())
+    Console.WriteLine($"[{DateTime.Now:T} INF] Applying EF Core migrations…");
+    Console.ResetColor();
+
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    const int maxAttempts = 6;
+    for (int attempt = 1; attempt <= maxAttempts; attempt++)
     {
-        var dataContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await dataContext.Database.MigrateAsync();
+        try
+        {
+            await db.Database.MigrateAsync();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"[{DateTime.Now:T} INF] Migrations EF Core OK.");
+            Console.ResetColor();
+            break;
+        }
+        catch (Exception ex)
+        {
+            if (attempt == maxAttempts)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"[{DateTime.Now:T} ERR] Migrations failed after {maxAttempts} attempts: {ex.Message}");
+                Console.ResetColor();
+                throw;
+            }
+            var delay = TimeSpan.FromSeconds(5);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"[{DateTime.Now:T} WRN] Migration attempt {attempt} failed: {ex.Message}. Retry in {delay.TotalSeconds}s…");
+            Console.ResetColor();
+            await Task.Delay(delay);
+        }
     }
-    Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] migrations successfully applied for Database type: " + DbType);
-    Console.ForegroundColor = ConsoleColor.White;
 }
 else
 {
     Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration is disabled! Skipping migration.");
-    Console.ForegroundColor = ConsoleColor.White;
+    Console.WriteLine($"[{DateTime.Now:T} INF] MigrateOnStartup=false, skipping migrations.");
+    Console.ResetColor();
 }
 
 // enable localization in request parameters
