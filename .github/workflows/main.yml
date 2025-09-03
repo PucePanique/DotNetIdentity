@@ -124,7 +124,7 @@ jobs:
               DB_NAME=CesiZEN
               DB_USER=sa
               SQL_SA_PASSWORD='${SA_PASSWORD}'
-              CONNECTION_STRING="Server=\${DB_HOST},\${DB_PORT};Database=\${DB_NAME};User Id=\${DB_USER};Password=\${SQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
+              CONNECTION_STRING="Server=${DB_HOST},${DB_PORT};Database=${DB_NAME};User Id=${DB_USER};Password=${SQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True"
               EOF
 
               # Le reste du script...
