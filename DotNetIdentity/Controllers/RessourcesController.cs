@@ -97,7 +97,8 @@ namespace DotNetIdentity.Controllers
             );
 
             generator.Generate();
-
+            if (ressources is null)
+                ressources = new();
             return View(ressources);
         }
 
