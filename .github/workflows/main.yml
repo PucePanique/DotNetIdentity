@@ -28,11 +28,17 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-      # 5️⃣ Lancer les migrations EF Core
+      # 5️⃣ Installer l’outil EF CLI
+      - name: Install EF CLI
+        run: dotnet tool install --global dotnet-ef --version 8.*
+
+      # 6️⃣ Lancer les migrations EF Core
       - name: Run EF migrations
         run: dotnet ef database update \
               --project DotNetIdentity/DotNetIdentity.csproj \
               --connection "${{ secrets.DB_CONNECTION }}"
+        env:
+          PATH: $PATH:/home/runner/.dotnet/tools
 
       # 6️⃣ Login Docker Hub (seulement si migrations OK ✅)
       - name: Login to Docker Hub
