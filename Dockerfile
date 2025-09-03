@@ -2,33 +2,33 @@
 # Étape 1 : Build
 # ----------------------
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-
-# Variables utiles
-ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
-    DOTNET_NOLOGO=true \
-    DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=true DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 
 WORKDIR /src
 
-# Copier le .csproj (cache restore)
+# Restore (cache-friendly)
 COPY DotNetIdentity/*.csproj ./DotNetIdentity/
-RUN dotnet restore ./DotNetIdentity/*.csproj
+RUN dotnet restore ./DotNetIdentity/DotNetIdentity.csproj
 
-# Copier le reste du code
+# Code
 COPY . .
 
-# Publier l'app
-RUN dotnet publish ./DotNetIdentity/*.csproj -c Release -o /app/publish
+# Build/publish de l’app
+RUN dotnet publish ./DotNetIdentity/DotNetIdentity.csproj -c Release -o /app/publish
 
-# Installer l’outil EF et exposer le PATH
+# Outil EF
 RUN dotnet tool install --global dotnet-ef --version 8.*
 ENV PATH="/root/.dotnet/tools:${PATH}"
 
-# (optionnel) vérifier la version
-RUN dotnet ef --version
+# Variable de connexion utilisée par le factory design-time
+ENV EF_DESIGNTIME_CONN="Server=localhost,1433;Database=DesignTime;User Id=sa;Password=Pass@word1;Encrypt=True;TrustServerCertificate=True"
 
-# Générer le bundle EF (avec logs détaillés)
-RUN dotnet ef --verbose migrations bundle \
+# (optionnel) Debug
+RUN dotnet ef --version
+# RUN dotnet ef dbcontext list --project ./DotNetIdentity/DotNetIdentity.csproj --startup-project ./DotNetIdentity/DotNetIdentity.csproj
+
+# Bundle des migrations sans tenter de booter ton host applicatif
+RUN dotnet ef migrations bundle \
     --project ./DotNetIdentity/DotNetIdentity.csproj \
     --startup-project ./DotNetIdentity/DotNetIdentity.csproj \
     --configuration Release \
@@ -45,7 +45,7 @@ WORKDIR /app
 COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
 
-# Script d'entrypoint (adapte le chemin si besoin)
+# Entrypoint: applique migrations puis démarre l’appli
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 

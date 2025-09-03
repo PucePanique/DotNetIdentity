@@ -266,8 +266,10 @@ Console.WriteLine($"[{DateTime.Now:T} INF] Database type is: {dbType}");
 Console.ResetColor();
 
 var migrateOnStartup = app.Configuration.GetValue("AppSettings:MigrateOnStartup", true);
+var isEfDesignTime = AppDomain.CurrentDomain.GetAssemblies()
+    .Any(a => a.FullName?.StartsWith("Microsoft.EntityFrameworkCore.Design", StringComparison.OrdinalIgnoreCase) == true);
 
-if (migrateOnStartup)
+if (migrateOnStartup && !isEfDesignTime)
 {
     const int maxAttempts = 6;
     var delay = TimeSpan.FromSeconds(5);
