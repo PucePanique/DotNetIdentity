@@ -32,6 +32,23 @@ var builder = WebApplication.CreateBuilder(args);
 var DbType = builder.Configuration.GetSection("AppSettings").GetSection("DataBaseType").Value;
 var connectionString = string.Empty;
 
+// Configuration HTTPS
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
+    options.HttpsPort = 443;
+});
+
+// Configuration Kestrel pour HTTPS
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(80); // HTTP
+    options.ListenAnyIP(443, listenOptions =>
+    {
+        listenOptions.UseHttps("/path/to/cert.pem", "/path/to/key.pem");
+    });
+});
+
 // database context
 if (DbType == "MySql")
 {
@@ -235,6 +252,10 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+// Forcer HTTPS
+app.UseHttpsRedirection();
+app.UseHsts(); // HTTP Strict Transport Security
 
 if (DbType != "SqlServer" && DbType != "MySql" && DbType != "SqLite")
 {

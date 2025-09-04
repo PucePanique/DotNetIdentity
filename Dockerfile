@@ -41,6 +41,8 @@ RUN dotnet ef migrations bundle \
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
+COPY certs/ /app/certs/
+
 COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
 
@@ -52,5 +54,6 @@ RUN chmod +x /app/entrypoint.sh
 ENV AppSettings__DataBaseType=SqlServer
 
 EXPOSE 80
+EXPOSE 443
 ENV ASPNETCORE_URLS=http://+:80
 ENTRYPOINT ["/app/entrypoint.sh"]
