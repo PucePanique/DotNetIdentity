@@ -4,23 +4,361 @@ using DotNetIdentity.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
-#pragma warning disable 1591
-namespace DotNetIdentity.Data.Migrations.MSSQL
+
+namespace DotNetIdentity.Migrations
 {
     [DbContext(typeof(AppDbContextSqlServer))]
-    partial class AppDbContextSqlServerModelSnapshot : ModelSnapshot
+    [Migration("20250904071233_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.11")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.DiagnosticModels.DiagnosticEvenements", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DiagnosticEvenements");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.DiagnosticModels.DiagnosticReponses", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DiagnosticEvenementId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DiagnosticSessionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiagnosticEvenementId");
+
+                    b.HasIndex("DiagnosticSessionId");
+
+                    b.ToTable("DiagnosticReponses");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.DiagnosticModels.DiagnosticSessions", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateDiagnostic")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NiveauStress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalPoints")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DiagnosticSessions");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.Respiration.ExerciceConfigurations", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ExerciceId")
+                        .HasColumnType("int")
+                        .HasColumnName("ExerciceId ");
+
+                    b.Property<int>("ExhaleDuration")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HoldDuration")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InhaleDuration")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciceId");
+
+                    b.ToTable("ExerciceConfigurations");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.Respiration.Exercices", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Exercices");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.Respiration.Sessions", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cycles")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ExerciceConfigurationId")
+                        .HasColumnType("int")
+                        .HasColumnName("ExerciceConfigurationId");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("UserId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciceConfigurationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Images", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Images");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Ressources", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Ressources");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.RessourcesImages", b =>
+                {
+                    b.Property<int>("RessourceId")
+                        .HasColumnType("int")
+                        .HasColumnName("RessourceId");
+
+                    b.Property<int>("ImageId")
+                        .HasColumnType("int")
+                        .HasColumnName("ImageId");
+
+                    b.HasKey("RessourceId", "ImageId");
+
+                    b.HasIndex("ImageId");
+
+                    b.ToTable("RessourcesImages");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.RessourcesTags", b =>
+                {
+                    b.Property<int>("RessourceId")
+                        .HasColumnType("int")
+                        .HasColumnName("RessourceId");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int")
+                        .HasColumnName("TagId");
+
+                    b.HasKey("RessourceId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("RessourcesTags");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Tags", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.DataModels.AppLogs", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<string>("Exception")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MessageTemplate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Properties")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("id");
+
+                    b.ToTable("AppLogs");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.DataModels.AppLogsSqLite", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<string>("Exception")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Properties")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RenderedMessage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("id");
+
+                    b.ToTable("AppLogsSqLite");
+                });
 
             modelBuilder.Entity("DotNetIdentity.Models.DataModels.ApplicationSettings", b =>
                 {
@@ -196,72 +534,6 @@ namespace DotNetIdentity.Data.Migrations.MSSQL
                         });
                 });
 
-            modelBuilder.Entity("DotNetIdentity.Models.DataModels.AppLogs", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"), 1L, 1);
-
-                    b.Property<string>("Exception")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Level")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MessageTemplate")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Properties")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("id");
-
-                    b.ToTable("AppLogs");
-                });
-
-            modelBuilder.Entity("DotNetIdentity.Models.DataModels.AppLogsSqLite", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"), 1L, 1);
-
-                    b.Property<string>("Exception")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Level")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Properties")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RenderedMessage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("id");
-
-                    b.ToTable("AppLogsSqLite");
-                });
-
             modelBuilder.Entity("DotNetIdentity.Models.Identity.AppRole", b =>
                 {
                     b.Property<string>("Id")
@@ -290,40 +562,6 @@ namespace DotNetIdentity.Data.Migrations.MSSQL
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "dffc6dd5-b145-41e9-a861-c87ff673e9ca",
-                            ConcurrencyStamp = "235280b3-8bbc-4099-8164-d80d76d126f7",
-                            CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = "f8a527ac-d7f6-4d9d-aca6-46b2261b042b",
-                            ConcurrencyStamp = "8e93b798-9018-49d5-adbe-ab33d959cb22",
-                            CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "User",
-                            NormalizedName = "USER"
-                        },
-                        new
-                        {
-                            Id = "g7a527ac-d7t6-4d7z-aca6-45t2261b042b",
-                            ConcurrencyStamp = "4a6ec0a0-247e-477e-b9a0-c734eef5e53f",
-                            CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Editor",
-                            NormalizedName = "EDITOR"
-                        },
-                        new
-                        {
-                            Id = "p9a527ac-d77w-4d3r-aca6-35b2261b042b",
-                            ConcurrencyStamp = "3b0542c7-86a8-4508-aca3-2e6927eefcd3",
-                            CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Moderator",
-                            NormalizedName = "MODERATOR"
-                        });
                 });
 
             modelBuilder.Entity("DotNetIdentity.Models.Identity.AppUser", b =>
@@ -432,7 +670,7 @@ namespace DotNetIdentity.Data.Migrations.MSSQL
                             Id = "6fbfb682-568c-4f5b-a298-85937ca4f7f3",
                             AccessFailedCount = 0,
                             BirthDay = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            ConcurrencyStamp = "c029117e-87ba-4fef-bfc1-b8d6519eabb1",
+                            ConcurrencyStamp = "13e1cffd-49a0-49bc-a380-4443838a6742",
                             CreatedOn = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Department = "",
                             Email = "super.admin@local.app",
@@ -446,11 +684,11 @@ namespace DotNetIdentity.Data.Migrations.MSSQL
                             LockoutEnabled = false,
                             NormalizedEmail = "SUPER.ADMIN@LOCAL.APP",
                             NormalizedUserName = "SUPER.ADMIN",
-                            PasswordHash = "AQAAAAEAACcQAAAAEOQmjsBsvTPF5SSFGoeQlKvJjdkGnt0O+Y/He/Wm4aW61Hnw/8qh3E2BCLO0ADHOyw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAX3jRxxi8hIaibNJfl8SWVNLfubJN6838pIySruBBHoSIVcAo7Uytci3OULTfYf+A==",
                             PhoneNumber = "111",
                             PhoneNumberConfirmed = false,
                             RolesCombined = "Admin",
-                            SecurityStamp = "a39a344c-6b43-48fa-a67f-f025130617b7",
+                            SecurityStamp = "7c3b2ca6-898e-4c2e-a0fe-261d43de5ca5",
                             TwoFactorEnabled = false,
                             TwoFactorType = 0,
                             UserName = "super.admin"
@@ -463,7 +701,7 @@ namespace DotNetIdentity.Data.Migrations.MSSQL
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");
@@ -488,7 +726,7 @@ namespace DotNetIdentity.Data.Migrations.MSSQL
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");
@@ -570,6 +808,100 @@ namespace DotNetIdentity.Data.Migrations.MSSQL
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.DiagnosticModels.DiagnosticReponses", b =>
+                {
+                    b.HasOne("DotNetIdentity.Models.CesiZenModels.DiagnosticModels.DiagnosticEvenements", "DiagnosticEvenement")
+                        .WithMany()
+                        .HasForeignKey("DiagnosticEvenementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DotNetIdentity.Models.CesiZenModels.DiagnosticModels.DiagnosticSessions", "DiagnosticSessions")
+                        .WithMany()
+                        .HasForeignKey("DiagnosticSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DiagnosticEvenement");
+
+                    b.Navigation("DiagnosticSessions");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.DiagnosticModels.DiagnosticSessions", b =>
+                {
+                    b.HasOne("DotNetIdentity.Models.Identity.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.Respiration.ExerciceConfigurations", b =>
+                {
+                    b.HasOne("DotNetIdentity.Models.CesiZenModels.Respiration.Exercices", "Exercice")
+                        .WithMany()
+                        .HasForeignKey("ExerciceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exercice");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.Respiration.Sessions", b =>
+                {
+                    b.HasOne("DotNetIdentity.Models.CesiZenModels.Respiration.ExerciceConfigurations", "ExerciceConfigurations")
+                        .WithMany()
+                        .HasForeignKey("ExerciceConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DotNetIdentity.Models.Identity.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("ExerciceConfigurations");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.RessourcesImages", b =>
+                {
+                    b.HasOne("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Images", "Images")
+                        .WithMany("RessourcesImages")
+                        .HasForeignKey("ImageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Ressources", "Ressources")
+                        .WithMany("RessourcesImages")
+                        .HasForeignKey("RessourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Images");
+
+                    b.Navigation("Ressources");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.RessourcesTags", b =>
+                {
+                    b.HasOne("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Ressources", "Ressources")
+                        .WithMany()
+                        .HasForeignKey("RessourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Tags", "Tags")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ressources");
+
+                    b.Navigation("Tags");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("DotNetIdentity.Models.Identity.AppRole", null)
@@ -620,7 +952,17 @@ namespace DotNetIdentity.Data.Migrations.MSSQL
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
-#pragma warning restore 612, 618, 1591
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Images", b =>
+                {
+                    b.Navigation("RessourcesImages");
+                });
+
+            modelBuilder.Entity("DotNetIdentity.Models.CesiZenModels.RessourcesModels.Ressources", b =>
+                {
+                    b.Navigation("RessourcesImages");
+                });
+#pragma warning restore 612, 618
         }
     }
 }

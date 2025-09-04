@@ -33,7 +33,7 @@ namespace DotNetIdentity.Controllers
         public IActionResult Index()
         {
             //return View();
-            return RedirectToAction(nameof(RessourcesController.Index));
+            return RedirectToAction(nameof(RessourcesController.Index), nameof(Ressources));
         }
 
         /// <summary>

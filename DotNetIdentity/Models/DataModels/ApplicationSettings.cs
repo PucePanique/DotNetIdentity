@@ -1,25 +1,26 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DotNetIdentity.Models.DataModels {
+namespace DotNetIdentity.Models.DataModels
+{
     /// <summary>
     /// class define an Settings object
     /// </summary>
-    public class ApplicationSettings {
+    public class ApplicationSettings
+    {
         /// <summary>
         /// property name
         /// </summary>
         /// <value>string</value>
-        [Key]
-        public string? Name {get;set;}
+        public string? Name { get; set; }
         /// <summary>
         /// property Type
         /// </summary>
         /// <value>string</value>
-        public string? Type {get;set;}
+        public string? Type { get; set; }
         /// <summary>
         /// property value
         /// </summary>
         /// <value>string</value>
-        public string? Value {get;set;}
+        public string? Value { get; set; }
     }
 }
