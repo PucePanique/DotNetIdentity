@@ -41,7 +41,7 @@ RUN dotnet ef migrations bundle \
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-COPY certs/ /app/certs/
+COPY certs.pem /app/certs/
 
 COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
