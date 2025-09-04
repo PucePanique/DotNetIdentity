@@ -39,21 +39,25 @@ RUN dotnet ef migrations bundle \
 # Étape 2 : Runtime
 # ----------------------
 
-COPY certs.pem /app/certs/
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+
+# Créer le répertoire certs
+RUN mkdir -p /app/certs
+
+# Copier les certificats (optionnel pour le build)
+COPY certs.pem /app/certs/ 2>/dev/null || echo "Pas de certificat trouvé"
+COPY certs.key /app/certs/ 2>/dev/null || echo "Pas de clé trouvée"
 
 COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
 
-# Entrypoint: applique migrations puis démarre l’appli
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Forcer SQL Server au runtime aussi
 ENV AppSettings__DataBaseType=SqlServer
 
 EXPOSE 80
 EXPOSE 443
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:443;https://+:80
 ENTRYPOINT ["/app/entrypoint.sh"]
