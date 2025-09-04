@@ -38,10 +38,10 @@ RUN dotnet ef migrations bundle \
 # ----------------------
 # Étape 2 : Runtime
 # ----------------------
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /app
 
 COPY certs.pem /app/certs/
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
 
 COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
