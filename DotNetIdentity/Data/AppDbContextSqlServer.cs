@@ -1,33 +1,36 @@
-// AppDbContextSqlServer.cs
-using DotNetIdentity.Models;
-using DotNetIdentity.Models.CesiZenModels.DiagnosticModels;
-using DotNetIdentity.Models.CesiZenModels.Respiration;
-using DotNetIdentity.Models.CesiZenModels.RessourcesModels;
-using DotNetIdentity.Models.DataModels;
 using DotNetIdentity.Models.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using DotNetIdentity.Models.DataModels;
+using System.ComponentModel.DataAnnotations.Schema;
+using DotNetIdentity.Models;
 
 namespace DotNetIdentity.Data
 {
+    /// <summary>
+    /// Application Database context class for MS Sql Server
+    /// </summary>
+    [NotMapped]
     public class AppDbContextSqlServer : AppDbContext
     {
-        public AppDbContextSqlServer(DbContextOptions<AppDbContextSqlServer> options) : base(options) { }
+        /// <summary>
+        /// class constructor
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public AppDbContextSqlServer(IConfiguration configuration) : base(configuration)
+        {
+        }
 
-        public DbSet<AppLogs>? AppLogs { get; set; }
-        public DbSet<ApplicationSettings> AppSettings { get; set; } = default!;
-        public DbSet<Ressources> Ressources { get; set; } = default!;
-        public DbSet<Images> Images { get; set; } = default!;
-        public DbSet<RessourcesImages> RessourcesImages { get; set; } = default!;
-        public DbSet<Tags> Tags { get; set; } = default!;
-        public DbSet<RessourcesTags> RessourcesTags { get; set; } = default!;
-        public DbSet<Sessions> Sessions { get; set; } = default!;
-        public DbSet<ExerciceConfigurations> ExerciceConfigurations { get; set; } = default!;
-        public DbSet<Exercices> Exercices { get; set; } = default!;
-        public DbSet<DiagnosticSessions> DiagnosticSessions { get; set; } = default!;
-        public DbSet<DiagnosticReponses> DiagnosticReponses { get; set; } = default!;
-        public DbSet<DiagnosticEvenements> DiagnosticEvenements { get; set; } = default!;
-
+        /// <summary>
+        /// override onconfiguring method
+        /// </summary>
+        /// <param name="options"></param>
+        protected override void OnConfiguring(DbContextOptionsBuilder options)
+        {
+            options.UseSqlServer(Configuration.GetConnectionString("SqlServer"));
+        }
 
         /// <summary>
         /// Overriding OnModelCreation to seed intitial data
@@ -37,9 +40,11 @@ namespace DotNetIdentity.Data
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<ApplicationSettings>()
+                    .HasKey(x => new { x.Name, x.Type });
 
-            builder.Entity<ApplicationSettings>().HasKey(x => new { x.Name, x.Type });
-            builder.Entity<ApplicationSettings>().Property(x => x.Value);
+            builder.Entity<ApplicationSettings>()
+                        .Property(x => x.Value);
 
             // seeding default settings            
             builder.Entity<ApplicationSettings>().HasData(new ApplicationSettings { Name = "SessionTimeoutWarnAfter", Type = "GlobalSettings", Value = "50000" });
@@ -72,6 +77,14 @@ namespace DotNetIdentity.Data
             builder.Entity<ApplicationSettings>().HasData(new ApplicationSettings { Name = "ColorHeadlines", Type = "BrandSettings", Value = "#090251" });
             builder.Entity<ApplicationSettings>().HasData(new ApplicationSettings { Name = "ColorTextMuted", Type = "BrandSettings", Value = "#a0aabb" });
 
+            //Seeding roles to AspNetRoles table
+            builder.Entity<AppRole>().HasData(new AppRole { Id = "dffc6dd5-b145-41e9-a861-c87ff673e9ca", Name = "Admin", NormalizedName = "ADMIN".ToUpper() });
+            builder.Entity<AppRole>().HasData(new AppRole { Id = "f8a527ac-d7f6-4d9d-aca6-46b2261b042b", Name = "User", NormalizedName = "USER".ToUpper() });
+            builder.Entity<AppRole>().HasData(new AppRole { Id = "g7a527ac-d7t6-4d7z-aca6-45t2261b042b", Name = "Editor", NormalizedName = "EDITOR".ToUpper() });
+            builder.Entity<AppRole>().HasData(new AppRole { Id = "p9a527ac-d77w-4d3r-aca6-35b2261b042b", Name = "Moderator", NormalizedName = "MODERATOR".ToUpper() });
+
+
+
             //a hasher to hash the password before seeding the user to the db
             var hasher = new PasswordHasher<AppUser>();
 
@@ -96,26 +109,6 @@ namespace DotNetIdentity.Data
                     Gender = Gender.Unknown
                 }
             );
-
-            builder.Entity<IdentityRole<string>>().HasData(
-               new IdentityRole<string>
-               {
-                   Id = "dffc6dd5-b145-41e9-a861-c87ff673e9ca",
-                   Name = "Admin",
-                   NormalizedName = "ADMIN",
-                   ConcurrencyStamp = "1"
-               }
-           );
-
-            builder.Entity<IdentityRole<string>>().HasData(
-              new IdentityRole<string>
-              {          
-                  Id = "f8a527ac-d7f6-4d9d-aca6-46b2261b042b",
-                  Name = "User",
-                  NormalizedName = "USER",
-                  ConcurrencyStamp = "8e93b798-9018-49d5-adbe-ab33d959cb22"
-              }
-          );
 
             //Seeding the relation between our user and role to AspNetUserRoles table
             builder.Entity<IdentityUserRole<string>>().HasData(

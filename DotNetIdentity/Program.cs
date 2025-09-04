@@ -1,12 +1,14 @@
 global using System.Globalization;
-global using DotNetIdentity.Services.SettingsService;
 global using Microsoft.AspNetCore.Localization;
+global using DotNetIdentity.Services.SettingsService;
+using System.Net;
 using DotNetIdentity.Data;
 using DotNetIdentity.Helpers;
 using DotNetIdentity.IdentitySettings;
 using DotNetIdentity.IdentitySettings.Requirements;
 using DotNetIdentity.IdentitySettings.Validators;
 using DotNetIdentity.Models;
+using DotNetIdentity.Models.BusinessModels;
 using DotNetIdentity.Models.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -14,64 +16,54 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
-using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
 using Serilog.Sinks.MariaDB;
 using Serilog.Sinks.MariaDB.Extensions;
-using Serilog.Sinks.MSSqlServer;
+using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
-
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.DataProtection;
 
 [assembly: System.Reflection.AssemblyVersion("1.1.*")]
 
 var builder = WebApplication.CreateBuilder(args);
-var dbType = builder.Configuration["AppSettings:DataBaseType"] ?? "SqlServer";
+var DbType = builder.Configuration.GetSection("AppSettings").GetSection("DataBaseType").Value;
+var connectionString = string.Empty;
 
-string? conn;
-switch (dbType)
+// database context
+if (DbType == "MySql")
 {
-    case "MySql":
-        conn = builder.Configuration.GetConnectionString("MySql");
-        if (string.IsNullOrWhiteSpace(conn))
-            throw new InvalidOperationException("ConnectionStrings:MySql manquante.");
-        builder.Services.AddDbContext<AppDbContext, AppDbContextMySql>(opt =>
-            opt.UseMySql(conn, ServerVersion.AutoDetect(conn)));
-        break;
-
-    case "SqlServer":
-        conn = builder.Configuration.GetConnectionString("SqlServer");
-        if (string.IsNullOrWhiteSpace(conn))
-            throw new InvalidOperationException("ConnectionStrings:SqlServer manquante.");
-        builder.Services.AddDbContext<AppDbContext, AppDbContextSqlServer>(opt =>
-            opt.UseSqlServer(conn));
-        break;
-
-    case "SqLite":
-        conn = builder.Configuration.GetConnectionString("SqLite");
-        if (string.IsNullOrWhiteSpace(conn))
-            throw new InvalidOperationException("ConnectionStrings:SqLite manquante.");
-        builder.Services.AddDbContext<AppDbContext, AppDbContextSqLite>(opt =>
-            opt.UseSqlite(conn));
-        break;
-
-    default:
-        throw new InvalidOperationException($"Unsupported AppSettings:DataBaseType '{dbType}'.");
+    connectionString = builder.Configuration.GetConnectionString("MySql");
+    builder.Services.AddDbContext<AppDbContext, AppDbContextMySql>();
+}
+else if (DbType == "SqlServer")
+{
+    connectionString = builder.Configuration.GetConnectionString("SqlServer");
+    builder.Services.AddDbContext<AppDbContext, AppDbContextSqlServer>();
+}
+else if (DbType == "SqLite")
+{
+    connectionString = builder.Configuration.GetConnectionString("SqLite");
+    builder.Services.AddDbContext<AppDbContext, AppDbContextSqLite>();
 }
 
 // add session
 builder.Services.AddSession(options =>
-        {
-            options.Cookie.Name = "SessionCookie";
-            options.IdleTimeout = TimeSpan.FromMinutes(7);
-            options.Cookie.IsEssential = true;
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-            options.Cookie.SameSite = SameSiteMode.Lax;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        });
+{
+    options.Cookie.Name = "SessionCookie";
+    options.IdleTimeout = TimeSpan.FromMinutes(7);
+    options.Cookie.IsEssential = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
 
 // add serilog
 var SeriLogConnStr = string.Empty;
-if (dbType == "MySql")
+if (DbType == "MySql")
 {
     var MpropertiesToColumns = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
     {
@@ -99,7 +91,7 @@ if (dbType == "MySql")
         .Enrich.FromLogContext()
         //.ReadFrom.Configuration(builder.Configuration)    
         .WriteTo.MariaDB(
-            connectionString: conn,
+            connectionString: connectionString,
             tableName: "AppLogs",
             autoCreateTable: true,
             useBulkInsert: false,
@@ -108,7 +100,7 @@ if (dbType == "MySql")
         .WriteTo.Console(theme: AnsiConsoleTheme.Code)
         .CreateLogger();
 }
-else if (dbType == "SqlServer")
+else if (DbType == "SqlServer")
 {
     var sinkOpts = new MSSqlServerSinkOptions
     {
@@ -125,13 +117,13 @@ else if (dbType == "SqlServer")
         .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
         .Enrich.FromLogContext()
         .WriteTo.MSSqlServer(
-            connectionString: conn,
+            connectionString: connectionString,
             sinkOptions: sinkOpts
         )
         .WriteTo.Console(theme: AnsiConsoleTheme.Code)
         .CreateLogger();
 }
-else if (dbType == "SqLite")
+else if (DbType == "SqLite")
 {
     Log.Logger = new LoggerConfiguration()
         .MinimumLevel.Debug()
@@ -182,22 +174,22 @@ builder.Services.AddScoped<TwoFactorAuthenticationService>();
 
 // add AspNetCore.Identity options
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
-    {
-        options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
-        options.User.RequireUniqueEmail = true;
+{
+    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+    options.User.RequireUniqueEmail = true;
 
-        options.Password.RequireDigit = false;
-        options.Password.RequiredLength = 8;
-        options.Password.RequiredUniqueChars = 1;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 8;
+    options.Password.RequiredUniqueChars = 1;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = false;
 
-        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-        options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
 
-        options.SignIn.RequireConfirmedEmail = true;
-    }).AddUserValidator<UserValidator>()
+    options.SignIn.RequireConfirmedEmail = true;
+}).AddUserValidator<UserValidator>()
     .AddPasswordValidator<PasswordValidator>()
     .AddErrorDescriber<ErrorDescriber>()
     .AddEntityFrameworkStores<AppDbContext>()
@@ -244,59 +236,39 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-if (dbType != "SqlServer" && dbType != "MySql" && dbType != "SqLite")
+if (DbType != "SqlServer" && DbType != "MySql" && DbType != "SqLite")
 {
     Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] " + dbType + " is an invalid Database type. Please take a look into your appsettings.json!");
+    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] " + DbType + " is an invalid Database type. Please take a look into your appsettings.json!");
     Console.ForegroundColor = ConsoleColor.White;
     await app.StopAsync();
 }
 
 // migrate initial
 Console.ForegroundColor = ConsoleColor.Cyan;
-Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] Database type is: " + dbType);
+Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] Database type is: " + DbType);
 Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] check if initial migration is enabled....");
 Console.ForegroundColor = ConsoleColor.White;
 
-// ----------------------
-// Migrations au démarrage (avec retry)
-// ----------------------
-Console.ForegroundColor = ConsoleColor.Cyan;
-Console.WriteLine($"[{DateTime.Now:T} INF] Database type is: {dbType}");
-Console.ResetColor();
-
-var migrateOnStartup = app.Configuration.GetValue("AppSettings:MigrateOnStartup", true);
-var isEfDesignTime = AppDomain.CurrentDomain.GetAssemblies()
-    .Any(a => a.FullName?.StartsWith("Microsoft.EntityFrameworkCore.Design", StringComparison.OrdinalIgnoreCase) == true);
-
-if (migrateOnStartup && !isEfDesignTime)
+if (builder.Configuration.GetSection("AppSettings").GetSection("MigrateOnStartup").Value == "true")
 {
-    const int maxAttempts = 6;
-    var delay = TimeSpan.FromSeconds(5);
-
-    using var scope = app.Services.CreateScope();
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("StartupMigration");
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); // <-- abstrait, DI fournit la bonne implémentation
-
-    for (int attempt = 1; attempt <= maxAttempts; attempt++)
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration is enabled! Applying migrations for Database type: " + DbType);
+    Console.ForegroundColor = ConsoleColor.White;
+    using (var scope = app.Services.CreateScope())
     {
-        try
-        {
-            logger.LogInformation("Applying EF Core migrations (attempt {Attempt}/{Max})…", attempt, maxAttempts);
-            await db.Database.MigrateAsync();
-            logger.LogInformation("EF Core migrations applied.");
-            break;
-        }
-        catch (Exception ex) when (attempt < maxAttempts)
-        {
-            logger.LogWarning(ex, "Migration attempt {Attempt} failed. Retrying in {Delay}s…", attempt, delay.TotalSeconds);
-            await Task.Delay(delay);
-        }
+        var dataContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await dataContext.Database.MigrateAsync();
     }
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] migrations successfully applied for Database type: " + DbType);
+    Console.ForegroundColor = ConsoleColor.White;
 }
 else
 {
-    Console.WriteLine("[INF] MigrateOnStartup=false, skipping migrations.");
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine("[" + DateTime.Now.ToLongTimeString() + " INF] initial migration is disabled! Skipping migration.");
+    Console.ForegroundColor = ConsoleColor.White;
 }
 
 // enable localization in request parameters
