@@ -41,9 +41,6 @@ RUN dotnet ef migrations bundle \
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-RUN mkdir /app/keys
-ENV DOTNET_DATA_PROTECTION__KEYS__PATH=/app/keys
-
 COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
 
