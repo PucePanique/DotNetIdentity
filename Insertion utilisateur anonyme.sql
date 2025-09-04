@@ -1,5 +1,5 @@
 ﻿-- 1. Insérer l'utilisateur ANONYMOUS
-INSERT INTO [dbo].[AspNetUsers] (
+INSERT INTO [AspNetUsers] (
     [Id],
     [TwoFactorType],
     [BirthDay],

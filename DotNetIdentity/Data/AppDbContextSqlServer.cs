@@ -110,6 +110,28 @@ namespace DotNetIdentity.Data
                 }
             );
 
+            //Seeding the Admin User to AspNetUsers table
+            builder.Entity<AppUser>().HasData(
+                new AppUser
+                {
+                    Id = "00000000-0000-0000-0000-000000000000", // primary key
+                    UserName = "super.admin",
+                    NormalizedUserName = "SUPER.ADMIN",
+                    PasswordHash = hasher.HashPassword(null!, "Test1000!"),
+                    Email = "super.admin@local.app",
+                    NormalizedEmail = "SUPER.ADMIN@LOCAL.APP",
+                    EmailConfirmed = true,
+                    FirstName = "Super",
+                    LastName = "Admin",
+                    IsMfaForce = false,
+                    IsLdapLogin = false,
+                    IsEnabled = true,
+                    RolesCombined = "Admin",
+                    PhoneNumber = "111",
+                    Gender = Gender.Unknown
+                }
+            );
+
             //Seeding the relation between our user and role to AspNetUserRoles table
             builder.Entity<IdentityUserRole<string>>().HasData(
                 new IdentityUserRole<string>
