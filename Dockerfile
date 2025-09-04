@@ -46,9 +46,8 @@ WORKDIR /app
 RUN mkdir -p /app/certs
 
 # Copier les certificats (optionnel pour le build)
-COPY certs.pem /app/certs/ 2>/dev/null || echo "Pas de certificat trouvé"
-COPY certs.key /app/certs/ 2>/dev/null || echo "Pas de clé trouvée"
-
+RUN if [ -f "/context/certs.pem" ]; then cp /context/certs.pem /app/certs/; fi || true
+RUN if [ -f "/context/certs.key" ]; then cp /context/certs.key /app/certs/; fi || true
 COPY --from=build /app/publish ./
 COPY --from=build /app/migrator /app/migrator
 
